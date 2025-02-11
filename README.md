@@ -22,4 +22,4 @@ Para iniciar la aplicación, primero debes asegurarte de estar en el directorio 
 
 1. Ejecuta la aplicación con uvicorn
     ```bash
-    uvicorn nombre_de_tu_app:app --reload
+    uvicorn app.main:app --host 0.0.0.0 --reload

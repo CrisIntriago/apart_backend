@@ -1,6 +1,6 @@
 from sqlalchemy import func, select, update, and_, exists
 from sqlalchemy.ext.asyncio import AsyncSession as Session
-from app.db.models.user_model import UserModel
+from app.db.models.user_models import UserModel
 
 class UserQueries:
     def __init__(self, session: Session):
