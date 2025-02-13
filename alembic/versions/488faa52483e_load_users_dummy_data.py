@@ -37,8 +37,8 @@ def upgrade() -> None:
     for user in users:
         op.execute(sa.text("""
             INSERT INTO users (name, last_name, email, password, created_at) 
-            VALUES (:name, :lastName, :email, :password, :created_at)
-        """).bindparams(name=user['name'], lastName=user['lastName'], email=user['email'], password=user['password'], created_at=user['created_at']))
+            VALUES (:name, :last_name, :email, :password, :created_at)
+        """).bindparams(name=user['name'], last_name=user['last_name'], email=user['email'], password=user['password'], created_at=user['created_at']))
 
 
 def downgrade() -> None:
