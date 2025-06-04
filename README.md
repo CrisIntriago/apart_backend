@@ -1,57 +1,121 @@
-# Proyecto API REST con Django y UV
+# Proyecto APART
 
-Este proyecto es una API REST construida con **Django** y **Django REST Framework** (DRF). Para gestionar las dependencias y ejecutar el proyecto, utilizaremos **UV**, un administrador de paquetes para Python que facilita la instalación y la ejecución del proyecto.
+Este proyecto es una API REST construida con **Django** y **Django REST Framework (DRF)**. Utiliza **PostgreSQL** como base de datos y **UV** como gestor de entorno y dependencias.
 
 ## Requisitos
 
-Antes de iniciar el proyecto, asegúrate de tener los siguientes requisitos:
+Antes de iniciar, asegúrate de tener instalado:
 
+* [Python 3.12](https://www.python.org/downloads/)
+* [UV](https://github.com/astral-sh/uv) (gestor de entorno y ejecución)
+* PostgreSQL (versión 13+ recomendada)
 
-- **Python 3.12**
-- **UV** (para gestionar el entorno y ejecutar el servidor)
+> Para instalar `uv`, puedes usar:
+>
+> ```bash
+> pip install uv
+> ```
 
-## Paso 1: Cl   onar el repositorio
+## 🧪 Instalación y ejecución del proyecto
 
-Primero, necesita clonar este repositorio en su entorno local. Puede hacer esto con el siguiente comando:
+### 1. Clonar el repositorio
 
-```sh
+```bash
 git clone https://gitlab.com/kamina-development/kamina-backend.git
-```
-
-## Paso 2: Navegar a la carpeta raíz del proyecto
-
-Una vez clonado el repositorio, navegue a la carpeta raíz del proyecto:
-
-```sh
 cd services/academy
 ```
 
-## Paso 3: Crear el entorno virtual con sus dependencias
-
-Necesitamos cargar el entorno virtual, para esto utilizamos uv:
+### 2. Crear entorno virtual e instalar dependencias
 
 ```bash
 uv sync
 ```
 
-## Ejecutar comando de Django
+> Esto instalará automáticamente las dependencias listadas en `pyproject.toml`.
 
-En vez usar: 
-```sh
-python manage.py startapp
+Claro, aquí tienes una sección lista para agregar al README, enfocada en **cómo generar el `SECRET_KEY`** de Django:
+
+---
+
+
+### 3. Configurar entorno
+
+Asegúrate de tener una base de datos PostgreSQL activa. Crea una base de datos y actualiza tus variables en el archivo `.env`.
+
+Ejemplo de configuración:
+
+```env
+SECRET_KEY=
+DB_NAME=
+DB_USER=
+DB_PASSWORD=
+DB_HOST=
+DB_PORT=
 ```
 
-Usaremos:
-```sh
-uv run manage.py startapp
+## Generar SECRET KEY para Django
+
+Django requiere una clave secreta (`SECRET_KEY`) para funciones criptográficas internas como la firma de cookies o tokens. Puedes generar una clave segura con el siguiente comando:
+
+```bash
+uv run python -c "from django.core.management.utils import get_random_secret_key; print(get_random_secret_key())"
 ```
 
-# Configurar variables de ambiente
+Copia el valor generado y pégalo en tu archivo `.env`:
 
-Las variables de entorno se cargan desde el archivo pyproject.toml y se puede agregar los archivos mediante envfile, aqui un ejemplo de task con su variable de entorno:
-[tool.poe.tasks]
-dev.cmd = "uvicorn app.main:app --reload"
-dev.envfile = ".env.dev"
+```env
+SECRET_KEY=coloca_aquí_tu_clave_generada
+```
 
-## Paso 1: Copiar archivo .env
-Cada uno de los proyectos debe tener un archivo .env.example el mismo que indica los nombres de las variables necesarias para poder ser ejecutado, este archivo debe ser copiado y renombrado con el nombre `.env` y se deben reemplazar los valores por los deseados.
+### 4. Configurar archivo `.env`
+
+Crea el archivo modifica según tus necesidades:
+
+> El archivo `.env` contiene configuraciones necesarias como claves secretas, modo de entorno y credenciales de base de datos.
+
+### 5. Aplicar migraciones y cargar datos iniciales
+
+```bash
+uv run manage.py migrate
+uv run manage.py createsuperuser
+```
+
+### 6. Levantar el servidor de desarrollo
+
+```bash
+uv run manage.py runserver
+```
+
+## ▶️ Comandos útiles con UV
+
+Todos los comandos de Django deben ser ejecutados usando `uv run`, por ejemplo:
+
+```bash
+uv run manage.py makemigrations
+uv run manage.py shell
+```
+
+## 🧪 Ejecutar tests
+
+Para correr los tests del proyecto, utiliza:
+
+```bash
+uv run manage.py test
+```
+
+Puedes correr un test específico con:
+
+```bash
+uv run manage.py test app.tests.test_nombre.TestClase.test_metodo
+```
+
+## 📦 Agregar nuevas dependencias
+
+Para instalar nuevas dependencias (por ejemplo, `django-cors-headers`), ejecuta:
+
+```bash
+uv pip install django-cors-headers
+uv pip compile pyproject.toml
+```
+
+Esto actualizará tu entorno virtual y las entradas correspondientes en `pyproject.toml`.
