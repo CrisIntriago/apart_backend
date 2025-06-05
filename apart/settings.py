@@ -48,6 +48,7 @@ INSTALLED_APPS = [
     "subscriptions",
     "content",
     "security",
+    'drf_yasg',
 ]
 
 MIDDLEWARE = [

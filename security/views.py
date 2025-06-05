@@ -5,11 +5,13 @@ from rest_framework.views import APIView
 from django.contrib.auth import login
 from .serializers import RegisterSerializer, LoginSerializer
 from .services import register_user, register_token, login_user
+from drf_yasg.utils import swagger_auto_schema
 
 
 class RegisterView(APIView):
     permission_classes = [AllowAny]
 
+    @swagger_auto_schema(request_body=RegisterSerializer)
     def post(self, request):
         serializer = RegisterSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
@@ -32,6 +34,7 @@ class RegisterView(APIView):
 class LoginView(APIView):
     permission_classes = [AllowAny]
 
+    @swagger_auto_schema(request_body=LoginSerializer)
     def post(self, request):
         serializer = LoginSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
