@@ -76,6 +76,7 @@ Crea el archivo modifica según tus necesidades:
 ### 5. Aplicar migraciones y cargar datos iniciales
 
 ```bash
+uv run manage.py makemigrations
 uv run manage.py migrate
 uv run manage.py createsuperuser
 ```
