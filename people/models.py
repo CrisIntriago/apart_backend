@@ -39,4 +39,3 @@ class Student(models.Model):
     )
     progress = models.IntegerField(default=0)
     vocabulary = models.TextField(null=True, blank=True)
-    subscription = models.CharField(max_length=50, null=True, blank=True)
