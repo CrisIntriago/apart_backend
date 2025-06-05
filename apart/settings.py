@@ -47,7 +47,7 @@ INSTALLED_APPS = [
     "people",
     "subscriptions",
     "content",
-    "auth",
+    "security",
 ]
 
 MIDDLEWARE = [
