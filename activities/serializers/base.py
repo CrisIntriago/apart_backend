@@ -9,3 +9,14 @@ class ActivityListSerializer(serializers.Serializer):
     difficulty = serializers.CharField()
     created_at = serializers.DateTimeField()
     payload = serializers.DictField()
+
+    class Meta:
+        fields = (
+            "id",
+            "type",
+            "title",
+            "instructions",
+            "difficulty",
+            "created_at",
+            "payload",
+        )
