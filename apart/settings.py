@@ -1,6 +1,7 @@
 import os
 from pathlib import Path
 
+import sys
 import environ
 
 """
@@ -84,7 +85,14 @@ WSGI_APPLICATION = "apart.wsgi.application"
 # Database
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
 
-if env('USE_SQLITE') == "True":
+if 'test' in sys.argv:
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': ':memory:',
+        }
+    }
+elif env('USE_SQLITE') == "True":
     DATABASES = {
         'default': {
             'ENGINE': 'django.db.backends.sqlite3',
