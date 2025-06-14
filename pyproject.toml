@@ -14,4 +14,21 @@ dependencies = [
     "sqlparse>=0.5.3",
     "psycopg2>=2.9.10",
     "drf-yasg>=1.21.10",
+    "ruff>=0.11.13",
 ]
+
+[tool.ruff]
+line-length = 88
+target-version = "py312"
+select = ["E", "F", "I"]
+ignore = []
+fix = true
+unsafe-fixes = false
+show-fixes = true
+preview = true
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
+line-ending = "auto"
+skip-magic-trailing-comma = false
