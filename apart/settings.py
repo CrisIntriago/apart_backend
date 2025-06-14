@@ -49,7 +49,7 @@ INSTALLED_APPS = [
     "subscriptions",
     "content",
     "security",
-    "drf_yasg",
+    "drf_spectacular",
 ]
 
 MIDDLEWARE = [
@@ -78,6 +78,18 @@ TEMPLATES = [
         },
     },
 ]
+
+REST_FRAMEWORK = {
+    "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
+}
+
+SPECTACULAR_SETTINGS = {
+    "TITLE": "Apart API",
+    "DESCRIPTION": "Documentación OpenAPI del backend Apart.",
+    "VERSION": "1.0.0",
+    "SERVE_INCLUDE_SCHEMA": False,
+}
+
 
 WSGI_APPLICATION = "apart.wsgi.application"
 
