@@ -19,4 +19,5 @@ class FillInTheBlankActivitySerializer(
         return "fill_in"
 
     def get_payload(self, obj):
+        obj = FillInTheBlankActivity.objects.get(pk=obj.pk)
         return {"text": obj.text}

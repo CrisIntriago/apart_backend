@@ -19,5 +19,6 @@ class WordOrderingActivitySerializer(
         return "word_ordering"
 
     def get_payload(self, obj):
+        obj = WordOrderingActivity.objects.get(pk=obj.pk)
         words = obj.sentence.strip().split()
         return {"words": words}

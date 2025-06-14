@@ -17,19 +17,12 @@ class MatchingActivitySerializer(ActivityListSerializer, serializers.ModelSerial
 
     class Meta:
         model = MatchingActivity
-        fields = [
-            "id",
-            "type",
-            "title",
-            "instructions",
-            "difficulty",
-            "created_at",
-            "payload",
-        ]
+        fields = ActivityListSerializer.Meta.fields
 
     def get_type(self, obj):
         return "matching"
 
     def get_payload(self, obj):
+        obj = MatchingActivity.objects.get(pk=obj.pk)
         pairs = MatchingPairSerializer(obj.pairs.all(), many=True).data
         return {"pairs": pairs}

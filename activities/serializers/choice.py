@@ -23,5 +23,6 @@ class ChoiceActivitySerializer(ActivityListSerializer, serializers.ModelSerializ
         return "multiple_choice"
 
     def get_payload(self, obj):
+        obj = ChoiceActivity.objects.get(pk=obj.pk)
         choices = ChoiceSerializer(obj.choices.all(), many=True).data
         return {"choices": choices, "is_multiple": obj.is_multiple}
