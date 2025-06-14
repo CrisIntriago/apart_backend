@@ -1,11 +1,12 @@
-from rest_framework import status
-from rest_framework.response import Response
-from rest_framework.permissions import AllowAny
-from rest_framework.views import APIView
 from django.contrib.auth import login
-from .serializers import RegisterSerializer, LoginSerializer
-from .services import register_user, register_token, login_user
 from drf_yasg.utils import swagger_auto_schema
+from rest_framework import status
+from rest_framework.permissions import AllowAny
+from rest_framework.response import Response
+from rest_framework.views import APIView
+
+from .serializers import LoginSerializer, RegisterSerializer
+from .services import login_user, register_token, register_user
 
 
 class RegisterView(APIView):

@@ -1,4 +1,5 @@
 from knox.models import AuthToken
+
 from users.models import User
 
 
