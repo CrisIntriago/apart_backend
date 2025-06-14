@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from .models.base import Activity
+from .models.base import Activity, ActivityType
 from .models.choice import Choice, ChoiceActivity
 from .models.fill_in_the_blank import FillInTheBlankActivity
 from .models.matching import MatchingActivity, MatchingPair
@@ -35,12 +35,18 @@ class ChoiceActivityAdmin(admin.ModelAdmin):
     inlines = [ChoiceInline]
     ordering = ("-created_at",)
 
+    def get_changeform_initial_data(self, request):
+        return {"type": ActivityType.CHOICE}
+
 
 @admin.register(FillInTheBlankActivity)
 class FillInTheBlankActivityAdmin(admin.ModelAdmin):
     list_display = ("title", "short_text", "difficulty", "created_at")
     search_fields = ("title", "text")
     ordering = ("-created_at",)
+
+    def get_changeform_initial_data(self, request):
+        return {"type": ActivityType.FILL}
 
     def short_text(self, obj):
         return (obj.text[:75] + "...") if len(obj.text) > 75 else obj.text
@@ -63,6 +69,9 @@ class MatchingActivityAdmin(admin.ModelAdmin):
     ordering = ("-created_at",)
     inlines = [MatchingPairInline]
 
+    def get_changeform_initial_data(self, request):
+        return {"type": ActivityType.MATCH}
+
 
 @admin.register(WordOrderingActivity)
 class WordOrderingActivityAdmin(admin.ModelAdmin):
@@ -72,5 +81,8 @@ class WordOrderingActivityAdmin(admin.ModelAdmin):
 
     def short_sentence(self, obj):
         return (obj.sentence[:75] + "...") if len(obj.sentence) > 75 else obj.sentence
+
+    def get_changeform_initial_data(self, request):
+        return {"type": ActivityType.ORDER}
 
     short_sentence.short_description = "Oración"
