@@ -50,6 +50,7 @@ INSTALLED_APPS = [
     "content",
     "security",
     "drf_spectacular",
+    "activities",
 ]
 
 MIDDLEWARE = [
