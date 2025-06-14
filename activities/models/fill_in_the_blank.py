@@ -1,6 +1,6 @@
 from django.db import models
 
-from activities.models.base import BaseActivity
+from .base import BaseActivity
 
 
 class FillInTheBlankActivity(BaseActivity):
