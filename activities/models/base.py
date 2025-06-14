@@ -9,7 +9,14 @@ class DificultyLevel(models.TextChoices):
     HARD = "hard", "Difícil"
 
 
-class BaseActivity(models.Model):
+class ActivityType(models.TextChoices):
+    CHOICE = "choice", "Opción múltiple"
+    FILL = "fill_in", "Completar"
+    MATCH = "matching", "Unir"
+    ORDER = "order", "Ordenar"
+
+
+class Activity(models.Model):
     title = models.CharField(max_length=255)
     instructions = models.TextField(blank=True)
     feedback = models.TextField(blank=True)
@@ -19,10 +26,17 @@ class BaseActivity(models.Model):
         default=DificultyLevel.MEDIUM,
         help_text="Nivel de dificultad de la actividad",
     )
+    type = models.CharField(
+        max_length=20,
+        choices=ActivityType.choices,
+        default=ActivityType.CHOICE,
+        help_text="Tipo de actividad",
+    )
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
-        abstract = True
+        db_table = "activity"
+        abstract = False
 
 
 class UserAnswer(models.Model):

@@ -1,9 +1,9 @@
 from django.db import models
 
-from .base import BaseActivity
+from .base import Activity
 
 
-class FillInTheBlankActivity(BaseActivity):
+class FillInTheBlankActivity(Activity):
     text = models.TextField(
         help_text="Texto con marcadores de posición, p.ej. 'La capital de Francia es {{blank}}'"  # noqa: E501
     )

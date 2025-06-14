@@ -1,9 +1,9 @@
 from django.db import models
 
-from .base import BaseActivity
+from .base import Activity
 
 
-class ChoiceActivity(BaseActivity):
+class ChoiceActivity(Activity):
     is_multiple = models.BooleanField(
         default=False,
         help_text="Marcar True si permite seleccionar múltiples opciones",

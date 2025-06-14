@@ -1,9 +1,9 @@
 from django.db import models
 
-from .base import BaseActivity
+from .base import Activity
 
 
-class MatchingActivity(BaseActivity):
+class MatchingActivity(Activity):
     pass
 
     class Meta:

@@ -1,9 +1,9 @@
 from django.db import models
 
-from .base import BaseActivity
+from .base import Activity
 
 
-class WordOrderingActivity(BaseActivity):
+class WordOrderingActivity(Activity):
     sentence = models.TextField(
         help_text="Oración correcta, p.ej. 'El gato está durmiendo'"
     )
