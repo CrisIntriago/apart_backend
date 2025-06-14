@@ -14,6 +14,9 @@ class ActivityAdmin(admin.ModelAdmin):
     list_filter = ("type", "difficulty")
     ordering = ("-created_at",)
 
+    def has_add_permission(self, request):
+        return False
+
     def get_queryset(self, request):
         return super().get_queryset(request)
 
