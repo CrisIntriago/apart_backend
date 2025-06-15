@@ -95,6 +95,38 @@ Todos los comandos de Django deben ser ejecutados usando `uv run`, por ejemplo:
 uv run manage.py makemigrations
 uv run manage.py shell
 ```
+Aquí tienes la sección actualizada para agregar al README, con los pasos adecuados para instalar una nueva librería usando `uv` de forma correcta y más segura (sin `pip install` directo):
+
+---
+
+## 📦 Agregar nuevas dependencias
+
+Para agregar una nueva dependencia al proyecto, utiliza el comando `uv add`. Este comando actualiza automáticamente tu archivo `pyproject.toml` y sincroniza el entorno virtual.
+
+### Ejemplo
+
+Para instalar `drf-yasg`, ejecuta:
+
+```bash
+uv add drf-yasg
+```
+
+Esto:
+
+* Instala la librería en el entorno virtual.
+* Agrega automáticamente la dependencia en `pyproject.toml`.
+* Mantiene sincronizada tu lista de paquetes.
+
+> **Nota:** No uses `pip install` directamente, ya que no actualizará correctamente `pyproject.toml`.
+
+Luego puedes continuar con los comandos de Django normalmente:
+
+```bash
+uv run manage.py migrate
+uv run manage.py runserver
+```
+
+---
 
 ## 🧪 Ejecutar tests
 
