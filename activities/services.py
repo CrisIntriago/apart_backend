@@ -14,8 +14,7 @@ class AnswerSubmissionService:
         activity = self._get_activity()
         serializer = self._get_validated_serializer(activity)
         is_correct = self._validate_response(activity, serializer.validated_data)
-        self._save_user_answer(activity, serializer.validated_data, is_correct)
-        return is_correct
+        return self._save_user_answer(activity, serializer.validated_data, is_correct)
 
     def _get_activity(self):
         return get_object_or_404(Activity, pk=self.activity_id)
@@ -36,7 +35,7 @@ class AnswerSubmissionService:
         return strategy.validate(activity, validated_data)
 
     def _save_user_answer(self, activity, response_data, is_correct):
-        UserAnswer.objects.create(
+        return UserAnswer.objects.create(
             user=self.user,
             activity_type=activity.type,
             activity_id=activity.id,

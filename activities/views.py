@@ -5,7 +5,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from activities.models.base import Activity
-from activities.serializers import ActivityListSerializer
+from activities.serializers import ActivityListSerializer, UserAnswerSerializer
 from activities.services import AnswerSubmissionService
 
 
@@ -25,7 +25,8 @@ class SubmitAnswerView(APIView):
     def post(self, request, activity_id):
         try:
             service = AnswerSubmissionService(request.user, activity_id, request.data)
-            is_correct = service.execute()
-            return Response({"is_correct": is_correct}, status=status.HTTP_200_OK)
+            user_answer = service.execute()
+            serializer = UserAnswerSerializer(user_answer)
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
         except ValueError as e:
             return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
