@@ -25,7 +25,9 @@ class ActivityListSerializer(serializers.ModelSerializer):
         strategy = PayloadStrategyRegistry.get_strategy(obj.type)
         if strategy:
             return strategy.get_payload(obj)
-        raise NotImplementedError("No implementado")
+        raise NotImplementedError(
+            "No payload strategy found for activity type: {}".format(obj.type)
+        )
 
 
 class MatchingPairSerializer(serializers.ModelSerializer):
