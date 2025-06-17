@@ -12,3 +12,4 @@ class ActivitiesConfig(AppConfig):
     def ready(self):
         base_path = Path(__file__).resolve().parent / "strategies"
         import_strategies("payload", base_path.parent)
+        import_strategies("validation", base_path.parent)
