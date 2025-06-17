@@ -10,10 +10,10 @@ class ModuleInline(admin.TabularInline):
 
 @admin.register(Course)
 class CourseAdmin(admin.ModelAdmin):
-    list_display = ('name',)
+    list_display = ("name",)
     inlines = [ModuleInline]
 
 
 @admin.register(Module)
 class ModuleAdmin(admin.ModelAdmin):
-    list_display = ('name', 'course')
+    list_display = ("name", "course")
