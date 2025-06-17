@@ -49,7 +49,6 @@ INSTALLED_APPS = [
     "subscriptions",
     "content",
     "security",
-    "strategies",
     "drf_spectacular",
     "activities",
 ]
