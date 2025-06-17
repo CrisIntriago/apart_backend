@@ -1,6 +1,6 @@
 from rest_framework import serializers
 
-from .models.base import Activity
+from .models.base import Activity, UserAnswer
 from .models.choice import Choice
 from .models.matching import MatchingPair
 from .strategies.payload.registry import PayloadStrategyRegistry
@@ -58,3 +58,9 @@ class MatchingAnswerInputSerializer(serializers.Serializer):
 
 class WordOrderingAnswerInputSerializer(serializers.Serializer):
     words = serializers.ListField(child=serializers.CharField())
+
+
+class UserAnswerSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = UserAnswer
+        fields = ["is_correct"]
