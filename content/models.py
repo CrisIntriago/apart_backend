@@ -3,6 +3,36 @@ from django.db import models
 from people.models import Student
 
 
+class Course(models.Model):
+    name = models.CharField(max_length=200)
+    description = models.TextField(blank=True)
+    english_level = models.CharField(max_length=50, blank=True)
+
+    class Meta:
+        verbose_name = 'Course'
+        verbose_name_plural = 'Courses'
+        db_table = 'courses'
+
+    def __str__(self):
+        return f'{self.name}'
+
+
+class Module(models.Model):
+    course = models.ForeignKey(
+        Course, on_delete=models.CASCADE, related_name='modules'
+    )
+    name = models.CharField(max_length=200)
+    description = models.TextField(blank=True)
+
+    class Meta:
+        verbose_name = 'Module'
+        verbose_name_plural = 'Modules'
+        db_table = 'modules'
+
+    def __str__(self):
+        return f"{self.course.name} › {self.name}"
+
+
 class Vocabulary(models.Model):
     student = models.ForeignKey(
         Student, on_delete=models.CASCADE, related_name='vocabularies'
