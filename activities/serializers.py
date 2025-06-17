@@ -38,3 +38,21 @@ class ChoiceSerializer(serializers.ModelSerializer):
     class Meta:
         model = Choice
         fields = ["id", "text"]
+
+
+class ChoiceAnswerInputSerializer(serializers.Serializer):
+    selected_ids = serializers.ListField(
+        child=serializers.IntegerField(), allow_empty=False
+    )
+
+
+class FillInTheBlankAnswerInputSerializer(serializers.Serializer):
+    answers = serializers.DictField(child=serializers.CharField(allow_blank=False))
+
+
+class MatchingAnswerInputSerializer(serializers.Serializer):
+    pairs = serializers.DictField(child=serializers.CharField())
+
+
+class WordOrderingAnswerInputSerializer(serializers.Serializer):
+    words = serializers.ListField(child=serializers.CharField())
