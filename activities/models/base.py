@@ -1,19 +1,7 @@
 from django.db import models
 
 from users.models import User
-
-
-class DificultyLevel(models.TextChoices):
-    EASY = "easy", "Fácil"
-    MEDIUM = "medium", "Medio"
-    HARD = "hard", "Difícil"
-
-
-class ActivityType(models.TextChoices):
-    CHOICE = "choice", "Opción múltiple"
-    FILL = "fill_in", "Completar"
-    MATCH = "matching", "Unir"
-    ORDER = "order", "Ordenar"
+from utils.enums import ActivityType, DifficultyLevel
 
 
 class Activity(models.Model):
@@ -22,8 +10,8 @@ class Activity(models.Model):
     feedback = models.TextField(blank=True)
     difficulty = models.CharField(
         max_length=20,
-        choices=DificultyLevel.choices,
-        default=DificultyLevel.MEDIUM,
+        choices=DifficultyLevel.choices,
+        default=DifficultyLevel.MEDIUM,
         help_text="Nivel de dificultad de la actividad",
     )
     type = models.CharField(
@@ -44,6 +32,8 @@ class UserAnswer(models.Model):
         User,
         on_delete=models.CASCADE,
         related_name="answers",
+        blank=True,
+        null=True,
     )
     activity_type = models.CharField(max_length=50)
     activity_id = models.PositiveIntegerField()
