@@ -1,33 +1,37 @@
 from django.db import models
 
 from people.models import Student
+from utils.enums import DifficultyLevel
 
 
 class Course(models.Model):
     name = models.CharField(max_length=200)
     description = models.TextField(blank=True)
-    english_level = models.CharField(max_length=50, blank=True)
+    difficulty = models.CharField(
+        max_length=50,
+        choices=DifficultyLevel.choices,
+        default=DifficultyLevel.MEDIUM,
+        blank=True,
+    )
 
     class Meta:
-        verbose_name = 'Course'
-        verbose_name_plural = 'Courses'
-        db_table = 'courses'
+        verbose_name = "Course"
+        verbose_name_plural = "Courses"
+        db_table = "courses"
 
     def __str__(self):
-        return f'{self.name}'
+        return f"{self.name}"
 
 
 class Module(models.Model):
-    course = models.ForeignKey(
-        Course, on_delete=models.CASCADE, related_name='modules'
-    )
+    course = models.ForeignKey(Course, on_delete=models.CASCADE, related_name="modules")
     name = models.CharField(max_length=200)
     description = models.TextField(blank=True)
 
     class Meta:
-        verbose_name = 'Module'
-        verbose_name_plural = 'Modules'
-        db_table = 'modules'
+        verbose_name = "Module"
+        verbose_name_plural = "Modules"
+        db_table = "modules"
 
     def __str__(self):
         return f"{self.course.name} › {self.name}"
@@ -35,16 +39,15 @@ class Module(models.Model):
 
 class Vocabulary(models.Model):
     student = models.ForeignKey(
-        Student, on_delete=models.CASCADE, related_name='vocabularies'
+        Student, on_delete=models.CASCADE, related_name="vocabularies"
     )
     word = models.CharField(max_length=100)
     meaning = models.TextField()
-    learned = models.BooleanField(default=False)
 
     class Meta:
-        verbose_name = 'Vocabulary'
-        verbose_name_plural = 'Vocabularies'
-        db_table = 'vocabulary'
+        verbose_name = "Vocabulary"
+        verbose_name_plural = "Vocabularies"
+        db_table = "vocabulary"
 
     def __str__(self):
-        return f'{self.word} - {self.student}'
+        return f"{self.word} - {self.student}"
