@@ -1,11 +1,12 @@
 from activities.models.base import Activity, ActivityType
 from activities.models.choice import ChoiceActivity
+from activities.serializers import ChoiceAnswerInputSerializer
 
 from .base import ValidationStrategy
 from .registry import ValidationStrategyRegistry
 
 
-@ValidationStrategyRegistry.register(ActivityType.CHOICE)
+@ValidationStrategyRegistry.register(ActivityType.CHOICE, ChoiceAnswerInputSerializer)
 class ChoiceValidationStrategy(ValidationStrategy):
     @classmethod
     def _validate(cls, activity: Activity, selected_ids: list[int]) -> bool:

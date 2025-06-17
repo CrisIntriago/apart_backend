@@ -1,11 +1,12 @@
 from activities.models.base import Activity, ActivityType
 from activities.models.matching import MatchingActivity
+from activities.serializers import MatchingAnswerInputSerializer
 
 from .base import ValidationStrategy
 from .registry import ValidationStrategyRegistry
 
 
-@ValidationStrategyRegistry.register(ActivityType.MATCH)
+@ValidationStrategyRegistry.register(ActivityType.MATCH, MatchingAnswerInputSerializer)
 class MatchingValidationStrategy(ValidationStrategy):
     def validate(self, activity: Activity, user_response: dict) -> bool:
         activity = MatchingActivity.objects.get(id=activity.pk)
