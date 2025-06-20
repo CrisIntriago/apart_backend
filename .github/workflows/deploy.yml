@@ -33,7 +33,7 @@ jobs:
         run: uv sync
 
       - name: Collect static files
-        run: run uv manage.py collectstatic --noinput
+        run: uv run manage.py collectstatic --noinput
 
       - name: Create zip deployment package
         run: zip -r ${{ env.DEPLOY_PACKAGE_NAME }} ./ -x *.git*
