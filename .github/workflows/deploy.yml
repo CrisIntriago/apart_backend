@@ -27,7 +27,7 @@ jobs:
           python-version: 3.12
       
       - name: Install package manager & dependencies manager
-        run: uv sync
+        run: pip install uv
 
       - name: Install dependencies uv
         run: uv sync
