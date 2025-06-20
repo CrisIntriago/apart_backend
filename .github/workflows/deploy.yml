@@ -33,11 +33,14 @@ jobs:
         with:
           python-version: 3.12
 
-      - name: Install package manager & dependencies manager
+      - name: Install dependencies
         run: pip install uv
 
       - name: Install dependencies uv
         run: uv sync
+
+      - name: Write dependencies for Elastic Beanstalk
+        run: uv pip compile pyproject.toml -o requirements.txt
 
       - name: Collect static files
         run: uv run manage.py collectstatic --noinput
