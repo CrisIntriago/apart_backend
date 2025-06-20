@@ -17,6 +17,7 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    environment: production
     steps:
       - name: Git clone on our repo
         uses: actions/checkout@v2
@@ -50,6 +51,7 @@ jobs:
         run: echo "CI part finished successfuly"
   deploy:
     runs-on: ubuntu-latest
+    environment: production
     needs: [build]
     steps:
       - name: Configure AWS credentials
