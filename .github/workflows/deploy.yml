@@ -15,6 +15,7 @@ env:
   DB_PORT: ${{ vars.DB_PORT }}
   DB_USER: ${{ vars.DB_USER }}
   USE_SQLITE: ${{ vars.USE_SQLITE }}
+  DEBUG: false
 
 on:
   push:
@@ -35,7 +36,7 @@ jobs:
 
       - name: Install uv
         run: pip install uv
-      
+
       - name: Generate requirements.txt
         run: uv pip compile pyproject.toml -o requirements.txt
 
@@ -58,7 +59,7 @@ jobs:
           aws-region: ${{ env.AWS_REGION_NAME }}
       - name: Copying file to S3
         run: aws s3 cp ${{ env.DEPLOY_PACKAGE_NAME }} s3://${{ env.EB_S3_BUCKET_NAME }}/
-      
+
       - name: Print nice message on success finish
         run: echo "CI part finished successfuly"
   deploy:
@@ -92,7 +93,8 @@ jobs:
               Namespace=aws:elasticbeanstalk:application:environment,OptionName=DB_PASSWORD,Value="${{ env.DB_PASSWORD }}" \
               Namespace=aws:elasticbeanstalk:application:environment,OptionName=DB_PORT,Value="${{ env.DB_PORT }}" \
               Namespace=aws:elasticbeanstalk:application:environment,OptionName=DB_USER,Value="${{ env.DB_USER }}" \
-              Namespace=aws:elasticbeanstalk:application:environment,OptionName=USE_SQLITE,Value="${{ env.USE_SQLITE }}"
+              Namespace=aws:elasticbeanstalk:application:environment,OptionName=USE_SQLITE,Value="${{ env.USE_SQLITE }}" \
+              Namespace=aws:elasticbeanstalk:application:environment,OptionName=DEBUG,Value="${{ env.DEBUG }}"
 
       - name: Print nice message on success finish
         run: echo "CD part finished successfuly"
