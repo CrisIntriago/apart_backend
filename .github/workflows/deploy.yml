@@ -2,13 +2,19 @@
 
 name: CI-CD pipeline to AWS
 env:
-  DJANGO_SECRET_KEY: ${{ secrets.DJANGO_SECRET_KEY }}
+  SECRET_KEY: ${{ secrets.SECRET_KEY }}
   EB_S3_BUCKET_NAME: "apart-django-deployment"
   EB_APPLICATION_NAME: "apart-backend"
   EB_ENVIRONMENT_NAME: "apart-backend-dev"
   DEPLOY_PACKAGE_NAME: "django-app-${{ github.sha }}.zip"
   VERSION_NAME: ${{ github.sha }}
   AWS_REGION_NAME: "us-east-1"
+  DB_HOST: ${{ vars.DB_HOST }}
+  DB_NAME: ${{ secrets.DB_NAME }}
+  DB_PASSWORD: ${{ vars.DB_PASSWORD }}
+  DB_PORT: ${{ vars.DB_PORT }}
+  DB_USER: ${{ vars.DB_USER }}
+  USE_SQLITE: ${{ vars.USE_SQLITE }}
 
 on:
   push:
@@ -26,7 +32,7 @@ jobs:
         uses: actions/setup-python@v2
         with:
           python-version: 3.12
-      
+
       - name: Install package manager & dependencies manager
         run: pip install uv
 
@@ -70,8 +76,17 @@ jobs:
 
       - name: Deploy new app
         run: |
-          aws elasticbeanstalk update-environment --environment-name ${{ env.EB_ENVIRONMENT_NAME }} --version-label "${{ env.VERSION_NAME }}" \
-          --option-settings Namespace=aws:elasticbeanstalk:application:environment,OptionName=DJANGO_SECRET_KEY,Value="${{ env.DJANGO_SECRET_KEY }}"
+          aws elasticbeanstalk update-environment \
+            --environment-name ${{ env.EB_ENVIRONMENT_NAME }} \
+            --version-label "${{ env.VERSION_NAME }}" \
+            --option-settings \
+              Namespace=aws:elasticbeanstalk:application:environment,OptionName=DJANGO_SECRET_KEY,Value="${{ env.SECRET_KEY }}" \
+              Namespace=aws:elasticbeanstalk:application:environment,OptionName=DB_HOST,Value="${{ env.DB_HOST }}" \
+              Namespace=aws:elasticbeanstalk:application:environment,OptionName=DB_NAME,Value="${{ env.DB_NAME }}" \
+              Namespace=aws:elasticbeanstalk:application:environment,OptionName=DB_PASSWORD,Value="${{ env.DB_PASSWORD }}" \
+              Namespace=aws:elasticbeanstalk:application:environment,OptionName=DB_PORT,Value="${{ env.DB_PORT }}" \
+              Namespace=aws:elasticbeanstalk:application:environment,OptionName=DB_USER,Value="${{ env.DB_USER }}" \
+              Namespace=aws:elasticbeanstalk:application:environment,OptionName=USE_SQLITE,Value="${{ env.USE_SQLITE }}"
 
       - name: Print nice message on success finish
         run: echo "CD part finished successfuly"
