@@ -20,10 +20,10 @@ local_settings.py
 **/migrations/*.py
 !**/migrations/__init__.py
 **/migrations/*.pyc
-
 # Environment variables
 .env
 .env.*
+!.env.example
 
 # Virtual environments
 .venv/
