@@ -1,5 +1,6 @@
 from django.db import models
 
+from languages.models import Language
 from people.models import Student
 from utils.enums import DifficultyLevel
 
@@ -7,6 +8,14 @@ from utils.enums import DifficultyLevel
 class Course(models.Model):
     name = models.CharField(max_length=200)
     description = models.TextField(blank=True)
+    image = models.ImageField(upload_to="courses/images/", blank=True, null=True)
+    language = models.ForeignKey(
+        Language,
+        on_delete=models.CASCADE,
+        related_name="courses",
+        blank=True,
+        null=True,
+    )
     difficulty = models.CharField(
         max_length=50,
         choices=DifficultyLevel.choices,
@@ -27,6 +36,13 @@ class Module(models.Model):
     course = models.ForeignKey(Course, on_delete=models.CASCADE, related_name="modules")
     name = models.CharField(max_length=200)
     description = models.TextField(blank=True)
+    image = models.ImageField(upload_to="modules/images/", blank=True, null=True)
+    difficulty = models.CharField(
+        max_length=50,
+        choices=DifficultyLevel.choices,
+        default=DifficultyLevel.MEDIUM,
+        blank=True,
+    )
 
     class Meta:
         verbose_name = "Module"
@@ -34,7 +50,7 @@ class Module(models.Model):
         db_table = "modules"
 
     def __str__(self):
-        return f"{self.course.name} › {self.name}"
+        return f"{self.course.name} > {self.name}"
 
 
 class Vocabulary(models.Model):
