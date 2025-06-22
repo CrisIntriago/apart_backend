@@ -1,6 +1,6 @@
-from activities.models.base import ActivityType
 from activities.models.fill_in_the_blank import FillInTheBlankActivity
 from activities.serializers import FillInTheBlankAnswerInputSerializer
+from utils.enums import ActivityType
 
 from .base import ValidationStrategy
 from .registry import ValidationStrategyRegistry

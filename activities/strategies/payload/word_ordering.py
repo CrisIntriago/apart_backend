@@ -1,5 +1,5 @@
-from activities.models.base import ActivityType
 from activities.models.word_ordering import WordOrderingActivity
+from utils.enums import ActivityType
 
 from .base import PayloadStrategy
 from .registry import PayloadStrategyRegistry

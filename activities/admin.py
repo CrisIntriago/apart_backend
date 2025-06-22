@@ -1,6 +1,8 @@
 from django.contrib import admin
 
-from .models.base import Activity, ActivityType
+from utils.enums import ActivityType
+
+from .models.base import Activity
 from .models.choice import Choice, ChoiceActivity
 from .models.fill_in_the_blank import FillInTheBlankActivity
 from .models.matching import MatchingActivity, MatchingPair

@@ -1,8 +1,8 @@
-from activities.models.base import ActivityType
 from activities.models.matching import MatchingActivity
 from activities.serializers import MatchingPairSerializer
 from activities.strategies.payload.base import PayloadStrategy
 from activities.strategies.payload.registry import PayloadStrategyRegistry
+from utils.enums import ActivityType
 
 
 @PayloadStrategyRegistry.register(ActivityType.MATCH)

@@ -1,6 +1,7 @@
-from activities.models.base import Activity, ActivityType
+from activities.models.base import Activity
 from activities.models.matching import MatchingActivity
 from activities.serializers import MatchingAnswerInputSerializer
+from utils.enums import ActivityType
 
 from .base import ValidationStrategy
 from .registry import ValidationStrategyRegistry
