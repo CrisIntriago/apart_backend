@@ -6,7 +6,7 @@ from .models.matching import MatchingPair
 from .strategies.payload.registry import PayloadStrategyRegistry
 
 
-class ActivityListSerializer(serializers.ModelSerializer):
+class ActivitySerializer(serializers.ModelSerializer):
     payload = serializers.SerializerMethodField()
 
     class Meta:
