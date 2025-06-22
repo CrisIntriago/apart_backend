@@ -33,10 +33,7 @@ uv sync
 
 > Esto instalará automáticamente las dependencias listadas en `pyproject.toml`.
 
-Claro, aquí tienes una sección lista para agregar al README, enfocada en **cómo generar el `SECRET_KEY`** de Django:
-
 ---
-
 
 ### 3. Configurar entorno
 
