@@ -45,6 +45,7 @@ class LoginView(APIView):
         responses={200: None},
         summary="Inicio de sesión",
         description="Inicia sesión con un usuario y devuelve su token",
+        auth=[]
     )
     def post(self, request):
         serializer = LoginSerializer(data=request.data)
