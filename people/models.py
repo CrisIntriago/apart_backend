@@ -1,6 +1,8 @@
 from django.db import models
 
+from languages.models import Language
 from users.models import User
+from utils.enums import ProficiencyLevel
 
 
 class Person(models.Model):
@@ -20,6 +22,12 @@ class Person(models.Model):
     first_name = models.CharField(max_length=100)
     last_name = models.CharField(max_length=100)
     date_of_birth = models.DateField(null=True, blank=True)
+    photo = models.ImageField(
+        upload_to="people/photos/",
+        null=True,
+        blank=True,
+    )
+    country = models.CharField(max_length=100, null=True, blank=True)
 
     def __str__(self):
         return f"{self.first_name} {self.last_name}"
@@ -40,3 +48,26 @@ class Student(models.Model):
     )
     progress = models.IntegerField(default=0)
     vocabulary = models.TextField(null=True, blank=True)
+
+
+class StudentLanguageProficiency(models.Model):
+    student = models.ForeignKey(
+        Student, on_delete=models.CASCADE, related_name="language_proficiencies"
+    )
+    language = models.ForeignKey(
+        Language, on_delete=models.CASCADE, related_name="student_proficiencies"
+    )
+    level = models.CharField(
+        max_length=2,
+        choices=ProficiencyLevel.choices,
+        default=ProficiencyLevel.BEGINNER,
+    )
+
+    class Meta:
+        unique_together = ("student", "language")
+        verbose_name = "Student Language Proficiency"
+        verbose_name_plural = "Student Language Proficiencies"
+        db_table = "student_language_proficiencies"
+
+    def __str__(self):
+        return f"{self.student} - {self.language} ({self.get_level_display()})"
