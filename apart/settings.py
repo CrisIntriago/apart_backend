@@ -41,6 +41,10 @@ ALLOWED_HOSTS = [
 # Application definition
 
 INSTALLED_APPS = [
+    "unfold",
+    "unfold.contrib.filters",
+    "unfold.contrib.forms",
+    "unfold.contrib.inlines",
     "django.contrib.admin",
     "django.contrib.auth",
     "django.contrib.contenttypes",
@@ -48,6 +52,7 @@ INSTALLED_APPS = [
     "django.contrib.messages",
     "django.contrib.staticfiles",
     "knox",
+    "apart",
     "users",
     "people",
     "languages",
@@ -208,3 +213,10 @@ CORS_ALLOWED_ORIGINS = [
     "http://localhost:3000",
     "http://127.0.0.1:3000",
 ]
+
+UNFOLD = {
+    "SITE_TITLE": "Admin | Apart",
+    "SITE_HEADER": "Apart",
+    "SHOW_COUNTS": True,
+    "DARK_MODE": False,
+}

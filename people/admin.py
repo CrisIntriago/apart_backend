@@ -1,11 +1,12 @@
 from django.contrib import admin
+from unfold.admin import ModelAdmin, TabularInline
 
 from .forms import PersonAdminForm
 from .models import Person, Student, StudentLanguageProficiency
 
 
 @admin.register(Person)
-class PersonAdmin(admin.ModelAdmin):
+class PersonAdmin(ModelAdmin):
     form = PersonAdminForm
     list_display = ("first_name", "last_name", "user")
     readonly_fields = ("user",)
@@ -14,7 +15,7 @@ class PersonAdmin(admin.ModelAdmin):
     raw_id_fields = ("user",)
 
 
-class StudentLanguageProficiencyInline(admin.TabularInline):
+class StudentLanguageProficiencyInline(TabularInline):
     model = StudentLanguageProficiency
     extra = 1
     min_num = 0
@@ -23,7 +24,7 @@ class StudentLanguageProficiencyInline(admin.TabularInline):
 
 
 @admin.register(Student)
-class StudentAdmin(admin.ModelAdmin):
+class StudentAdmin(ModelAdmin):
     list_display = ("person",)
     search_fields = ("person__first_name", "person__last_name")
     raw_id_fields = ("person",)

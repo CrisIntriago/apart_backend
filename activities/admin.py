@@ -1,4 +1,5 @@
 from django.contrib import admin
+from unfold.admin import ModelAdmin
 
 from utils.enums import ActivityType
 
@@ -10,7 +11,7 @@ from .models.word_ordering import WordOrderingActivity
 
 
 @admin.register(Activity)
-class ActivityAdmin(admin.ModelAdmin):
+class ActivityAdmin(ModelAdmin):
     list_display = ("title", "type", "difficulty", "created_at")
     search_fields = ("title", "description")
     list_filter = ("type", "difficulty")
@@ -33,7 +34,7 @@ class ChoiceInline(admin.TabularInline):
 
 
 @admin.register(ChoiceActivity)
-class ChoiceActivityAdmin(admin.ModelAdmin):
+class ChoiceActivityAdmin(ModelAdmin):
     list_display = ("title", "is_multiple", "difficulty", "created_at")
     search_fields = ("title",)
     list_filter = ("is_multiple", "difficulty")
@@ -45,7 +46,7 @@ class ChoiceActivityAdmin(admin.ModelAdmin):
 
 
 @admin.register(FillInTheBlankActivity)
-class FillInTheBlankActivityAdmin(admin.ModelAdmin):
+class FillInTheBlankActivityAdmin(ModelAdmin):
     list_display = ("title", "short_text", "difficulty", "created_at")
     search_fields = ("title", "text")
     ordering = ("-created_at",)
@@ -68,7 +69,7 @@ class MatchingPairInline(admin.TabularInline):
 
 
 @admin.register(MatchingActivity)
-class MatchingActivityAdmin(admin.ModelAdmin):
+class MatchingActivityAdmin(ModelAdmin):
     list_display = ("title", "difficulty", "created_at")
     search_fields = ("title",)
     ordering = ("-created_at",)
@@ -79,7 +80,7 @@ class MatchingActivityAdmin(admin.ModelAdmin):
 
 
 @admin.register(WordOrderingActivity)
-class WordOrderingActivityAdmin(admin.ModelAdmin):
+class WordOrderingActivityAdmin(ModelAdmin):
     list_display = ("title", "short_sentence", "difficulty", "created_at")
     search_fields = ("title", "sentence")
     ordering = ("-created_at",)

@@ -17,6 +17,7 @@ dependencies = [
     "drf-spectacular>=0.28.0",
     "gunicorn>=23.0.0",
     "django-cors-headers>=4.7.0",
+    "django-unfold>=0.60.0",
 ]
 
 [tool.ruff]
