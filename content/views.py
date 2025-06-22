@@ -14,7 +14,7 @@ class CourseListView(APIView):
     )
     def get(self, request):
         courses = Course.objects.all()
-        serializer = CourseSerializer(courses, many=True)
+        serializer = CourseSerializer(courses, many=True, context={"request": request})
         return Response(serializer.data)
 
 
@@ -31,5 +31,5 @@ class CourseModulesView(APIView):
             )
 
         modules = course.modules.all()
-        serializer = ModuleSerializer(modules, many=True)
+        serializer = ModuleSerializer(modules, many=True, context={"request": request})
         return Response(serializer.data)
