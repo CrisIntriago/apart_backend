@@ -4,16 +4,19 @@ from .base import Activity
 
 
 class ChoiceActivity(Activity):
+    class Meta:
+        db_table = "choice_activity"
+
     is_multiple = models.BooleanField(
         default=False,
         help_text="Marcar True si permite seleccionar múltiples opciones",
     )
 
-    class Meta:
-        db_table = "choice_activity"
-
 
 class Choice(models.Model):
+    class Meta:
+        db_table = "choice"
+
     activity = models.ForeignKey(
         ChoiceActivity,
         related_name="choices",
@@ -24,6 +27,3 @@ class Choice(models.Model):
 
     def __str__(self):
         return self.text
-
-    class Meta:
-        db_table = "choice"

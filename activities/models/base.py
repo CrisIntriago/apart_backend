@@ -6,6 +6,10 @@ from utils.enums import ActivityType, DifficultyLevel
 
 
 class Activity(models.Model):
+    class Meta:
+        db_table = "activity"
+        abstract = False
+
     title = models.CharField(max_length=255)
     instructions = models.TextField(blank=True)
     feedback = models.TextField(blank=True)
@@ -30,15 +34,14 @@ class Activity(models.Model):
         null=True,
     )
 
-    class Meta:
-        db_table = "activity"
-        abstract = False
-
     def __str__(self):
         return f"{self.title} ({self.get_type_display()}) - {self.get_difficulty_display()}"  # noqa: E501
 
 
 class UserAnswer(models.Model):
+    class Meta:
+        db_table = "user_answer"
+
     user = models.ForeignKey(
         User,
         on_delete=models.CASCADE,
@@ -51,6 +54,3 @@ class UserAnswer(models.Model):
     response_data = models.JSONField()
     is_correct = models.BooleanField()
     answered_at = models.DateTimeField(auto_now_add=True)
-
-    class Meta:
-        db_table = "user_answer"

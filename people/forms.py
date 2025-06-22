@@ -6,6 +6,10 @@ from .models import Person
 
 
 class PersonAdminForm(forms.ModelForm):
+    class Meta:
+        model = Person
+        fields = "__all__"
+
     existing_user = forms.ModelChoiceField(
         queryset=User.objects.all(),
         required=False,
@@ -17,10 +21,6 @@ class PersonAdminForm(forms.ModelForm):
     new_password = forms.CharField(
         required=False, label="Nuevo password", widget=forms.PasswordInput
     )
-
-    class Meta:
-        model = Person
-        fields = "__all__"
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)

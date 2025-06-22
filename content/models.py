@@ -6,6 +6,11 @@ from utils.enums import DifficultyLevel
 
 
 class Course(models.Model):
+    class Meta:
+        verbose_name = "Course"
+        verbose_name_plural = "Courses"
+        db_table = "courses"
+
     name = models.CharField(max_length=200)
     description = models.TextField(blank=True)
     image = models.ImageField(upload_to="courses/images/", blank=True, null=True)
@@ -23,16 +28,16 @@ class Course(models.Model):
         blank=True,
     )
 
-    class Meta:
-        verbose_name = "Course"
-        verbose_name_plural = "Courses"
-        db_table = "courses"
-
     def __str__(self):
         return f"{self.name}"
 
 
 class Module(models.Model):
+    class Meta:
+        verbose_name = "Module"
+        verbose_name_plural = "Modules"
+        db_table = "modules"
+
     course = models.ForeignKey(Course, on_delete=models.CASCADE, related_name="modules")
     name = models.CharField(max_length=200)
     description = models.TextField(blank=True)
@@ -44,26 +49,21 @@ class Module(models.Model):
         blank=True,
     )
 
-    class Meta:
-        verbose_name = "Module"
-        verbose_name_plural = "Modules"
-        db_table = "modules"
-
     def __str__(self):
         return f"{self.course.name} - {self.name}"
 
 
 class Vocabulary(models.Model):
+    class Meta:
+        verbose_name = "Vocabulary"
+        verbose_name_plural = "Vocabularies"
+        db_table = "vocabulary"
+
     student = models.ForeignKey(
         Student, on_delete=models.CASCADE, related_name="vocabularies"
     )
     word = models.CharField(max_length=100)
     meaning = models.TextField()
-
-    class Meta:
-        verbose_name = "Vocabulary"
-        verbose_name_plural = "Vocabularies"
-        db_table = "vocabulary"
 
     def __str__(self):
         return f"{self.word} - {self.student}"

@@ -52,6 +52,12 @@ class Student(models.Model):
 
 
 class StudentLanguageProficiency(models.Model):
+    class Meta:
+        unique_together = ("student", "language")
+        verbose_name = "Student Language Proficiency"
+        verbose_name_plural = "Student Language Proficiencies"
+        db_table = "student_language_proficiencies"
+
     student = models.ForeignKey(
         Student, on_delete=models.CASCADE, related_name="language_proficiencies"
     )
@@ -63,12 +69,6 @@ class StudentLanguageProficiency(models.Model):
         choices=ProficiencyLevel.choices,
         default=ProficiencyLevel.BEGINNER,
     )
-
-    class Meta:
-        unique_together = ("student", "language")
-        verbose_name = "Student Language Proficiency"
-        verbose_name_plural = "Student Language Proficiencies"
-        db_table = "student_language_proficiencies"
 
     def __str__(self):
         return f"{self.student} - {self.language} ({self.get_level_display()})"

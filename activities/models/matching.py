@@ -11,6 +11,9 @@ class MatchingActivity(Activity):
 
 
 class MatchingPair(models.Model):
+    class Meta:
+        db_table = "matching_pair"
+
     activity = models.ForeignKey(
         MatchingActivity,
         related_name="pairs",
@@ -21,6 +24,3 @@ class MatchingPair(models.Model):
 
     def __str__(self):
         return f"{self.left} ↔ {self.right}"
-
-    class Meta:
-        db_table = "matching_pair"
