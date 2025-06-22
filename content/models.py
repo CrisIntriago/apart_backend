@@ -50,7 +50,7 @@ class Module(models.Model):
         db_table = "modules"
 
     def __str__(self):
-        return f"{self.course.name} > {self.name}"
+        return f"{self.course.name} - {self.name}"
 
 
 class Vocabulary(models.Model):

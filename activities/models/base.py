@@ -34,6 +34,9 @@ class Activity(models.Model):
         db_table = "activity"
         abstract = False
 
+    def __str__(self):
+        return f"{self.title} ({self.get_type_display()}) - {self.get_difficulty_display()}"  # noqa: E501
+
 
 class UserAnswer(models.Model):
     user = models.ForeignKey(
