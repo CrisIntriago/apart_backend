@@ -9,13 +9,13 @@ env:
   DEPLOY_PACKAGE_NAME: "django-app-${{ github.sha }}.zip"
   VERSION_NAME: ${{ github.sha }}
   AWS_REGION_NAME: "us-east-1"
-  DB_HOST: ${{ vars.DB_HOST }}
-  DB_NAME: ${{ secrets.DB_NAME }}
-  DB_PASSWORD: ${{ vars.DB_PASSWORD }}
+  DB_HOST: ${{ secrets.DB_HOST }}
+  DB_NAME: ${{ vars.DB_NAME }}
+  DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
   DB_PORT: ${{ vars.DB_PORT }}
   DB_USER: ${{ vars.DB_USER }}
   USE_SQLITE: ${{ vars.USE_SQLITE }}
-  DEBUG: false
+  DEBUG: ${{ vars.DEBUG }}
 
 on:
   push:
