@@ -5,14 +5,11 @@ from people.models import Person, StudentLanguageProficiency
 
 
 class StudentLanguageProficiencySerializer(serializers.ModelSerializer):
-    language = serializers.SerializerMethodField()
+    language = LanguageSerializer(read_only=True)
 
     class Meta:
         model = StudentLanguageProficiency
         fields = ("language", "level")
-
-    def get_language(self, obj):
-        return LanguageSerializer(obj.language, context=self.context).data
 
     def to_representation(self, instance):
         representation = super().to_representation(instance)
