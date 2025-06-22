@@ -8,7 +8,7 @@ class DifficultyLevel(models.TextChoices):
 
 
 class ActivityType(models.TextChoices):
-    MULTIPLE_OPTION_THEORY = "choice", "Opción múltiple"
+    CHOICE = "choice", "Opción múltiple"
     FILL = "fill_in", "Completar"
     MATCH = "matching", "Unir"
     ORDER = "order", "Ordenar"
