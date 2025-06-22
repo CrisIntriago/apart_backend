@@ -1,5 +1,6 @@
 from django.db import models
 
+from content.models import Module
 from users.models import User
 from utils.enums import ActivityType, DifficultyLevel
 
@@ -21,6 +22,13 @@ class Activity(models.Model):
         help_text="Tipo de actividad",
     )
     created_at = models.DateTimeField(auto_now_add=True)
+    module = models.ForeignKey(
+        Module,
+        on_delete=models.CASCADE,
+        related_name="activities",
+        blank=True,
+        null=True,
+    )
 
     class Meta:
         db_table = "activity"
