@@ -46,8 +46,9 @@ class Student(models.Model):
         null=True,
         blank=True,
     )
-    progress = models.IntegerField(default=0)
-    vocabulary = models.TextField(null=True, blank=True)
+
+    def __str__(self):
+        return f"{self.person.first_name} {self.person.last_name} (Student)"
 
 
 class StudentLanguageProficiency(models.Model):
