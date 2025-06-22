@@ -31,7 +31,12 @@ SECRET_KEY = env("SECRET_KEY")
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = env.bool("DEBUG", default=True)
 
-ALLOWED_HOSTS = ["localhost", "127.0.0.1", "apart.us-east-1.elasticbeanstalk.com", "study-apart.com"]
+ALLOWED_HOSTS = [
+    "localhost",
+    "127.0.0.1",
+    "apart.us-east-1.elasticbeanstalk.com",
+    "study-apart.com",
+]
 
 # Application definition
 
@@ -45,6 +50,7 @@ INSTALLED_APPS = [
     "knox",
     "users",
     "people",
+    "languages",
     "subscriptions",
     "content",
     "security",
@@ -156,7 +162,6 @@ USE_I18N = True
 USE_TZ = True
 
 
-
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
 
@@ -170,11 +175,16 @@ AUTH_USER_MODEL = "users.User"
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.2/howto/static-files/
-STATIC_URL = 'static/'
+
+MEDIA_URL = "media/"
+MEDIA_ROOT = os.path.join(BASE_DIR, "media")
+
+
+STATIC_URL = "static/"
 STATICFILES_DIRS = [
-    os.path.join(BASE_DIR, 'static'),
+    os.path.join(BASE_DIR, "static"),
 ]
-STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
+STATIC_ROOT = os.path.join(BASE_DIR, "staticfiles")
 
 
 CORS_ALLOWED_ORIGINS = [
