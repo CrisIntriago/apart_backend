@@ -88,6 +88,9 @@ TEMPLATES = [
 
 REST_FRAMEWORK = {
     "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
+    "DEFAULT_AUTHENTICATION_CLASSES": [
+        "knox.auth.TokenAuthentication",
+    ],
 }
 
 SPECTACULAR_SETTINGS = {
@@ -95,6 +98,20 @@ SPECTACULAR_SETTINGS = {
     "DESCRIPTION": "Documentación OpenAPI del backend Apart.",
     "VERSION": "1.0.0",
     "SERVE_INCLUDE_SCHEMA": False,
+    "SWAGGER_UI_SETTINGS": {
+        "persistAuthorization": True,
+    },
+    "SECURITY": [{"TokenAuth": []}],
+    "COMPONENTS": {
+        "securitySchemes": {
+            "TokenAuth": {
+                "type": "apiKey",
+                "in": "header",
+                "name": "Authorization",
+                "description": "Usa el formato: Token <tu_token>",
+            }
+        }
+    },
 }
 
 
