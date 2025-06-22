@@ -21,7 +21,7 @@ Antes de iniciar, asegúrate de tener instalado:
 ### 1. Clonar el repositorio
 
 ```bash
-git clone https://gitlab.com/kamina-development/kamina-backend.git
+git clone <URL_DE_TU_REPOSITORIO>
 cd services/academy
 ```
 
