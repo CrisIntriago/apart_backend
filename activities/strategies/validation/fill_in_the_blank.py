@@ -1,3 +1,4 @@
+from activities.models import Activity
 from activities.models.fill_in_the_blank import FillInTheBlankActivity
 from activities.serializers import FillInTheBlankAnswerInputSerializer
 from utils.enums import ActivityType
@@ -10,7 +11,8 @@ from .registry import ValidationStrategyRegistry
     ActivityType.FILL, FillInTheBlankAnswerInputSerializer
 )
 class FillInTheBlankValidationStrategy(ValidationStrategy):
-    def validate(self, activity: FillInTheBlankActivity, user_response: dict) -> bool:
+    def validate(self, activity: Activity, user_response: dict) -> bool:
+        activity = FillInTheBlankActivity.objects.get(id=activity.id)
         expected_answers = activity.correct_answers
         user_answers = user_response.get("answers", {})
 
