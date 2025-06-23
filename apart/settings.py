@@ -74,9 +74,10 @@ MIDDLEWARE = [
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
 ]
 
-# Configuraciones de seguridad relacionadas con SSL y proxy
+## Configuraciones de seguridad relacionadas con SSL y proxy
 SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 SECURE_SSL_REDIRECT = True
+
 
 ROOT_URLCONF = "apart.urls"
 
