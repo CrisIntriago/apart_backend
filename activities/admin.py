@@ -1,5 +1,5 @@
 from django.contrib import admin
-from unfold.admin import ModelAdmin
+from unfold.admin import ModelAdmin, TabularInline
 
 from utils.enums import ActivityType
 
@@ -24,7 +24,7 @@ class ActivityAdmin(ModelAdmin):
         return super().get_queryset(request)
 
 
-class ChoiceInline(admin.TabularInline):
+class ChoiceInline(TabularInline):
     model = Choice
     extra = 2
     min_num = 1
@@ -60,7 +60,7 @@ class FillInTheBlankActivityAdmin(ModelAdmin):
     short_text.short_description = "Texto"
 
 
-class MatchingPairInline(admin.TabularInline):
+class MatchingPairInline(TabularInline):
     model = MatchingPair
     extra = 2
     min_num = 1

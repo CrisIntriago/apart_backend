@@ -1,10 +1,10 @@
 from django.contrib import admin
-from unfold.admin import ModelAdmin
+from unfold.admin import ModelAdmin, TabularInline
 
 from .models import Course, Module
 
 
-class ModuleInline(admin.TabularInline):
+class ModuleInline(TabularInline):
     model = Module
     extra = 1
 
