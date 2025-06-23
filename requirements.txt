@@ -4,6 +4,7 @@ asgiref==3.8.1
     # via
     #   apart-rest-api (pyproject.toml)
     #   django
+    #   django-cors-headers
 attrs==25.3.0
     # via
     #   jsonschema
@@ -11,15 +12,21 @@ attrs==25.3.0
 django==5.2.3
     # via
     #   apart-rest-api (pyproject.toml)
+    #   django-cors-headers
     #   django-extensions
     #   django-rest-knox
+    #   django-unfold
     #   djangorestframework
     #   drf-spectacular
+django-cors-headers==4.7.0
+    # via apart-rest-api (pyproject.toml)
 django-environ==0.12.0
     # via apart-rest-api (pyproject.toml)
 django-extensions==4.1
     # via apart-rest-api (pyproject.toml)
 django-rest-knox==5.0.2
+    # via apart-rest-api (pyproject.toml)
+django-unfold==0.60.0
     # via apart-rest-api (pyproject.toml)
 djangorestframework==3.16.0
     # via
@@ -38,6 +45,8 @@ jsonschema-specifications==2025.4.1
     # via jsonschema
 packaging==25.0
     # via gunicorn
+pillow==11.2.1
+    # via apart-rest-api (pyproject.toml)
 psycopg2-binary==2.9.10
     # via apart-rest-api (pyproject.toml)
 pyyaml==6.0.2
