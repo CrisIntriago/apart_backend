@@ -29,17 +29,3 @@ jobs:
         run: |
           uv sync
           uv run manage.py test
-
-      - name: Set up Railway CLI
-        run: |
-          curl -sSL https://railway.app/cli.sh -o railway-cli.sh
-          bash railway-cli.sh
-          railway login --apiKey ${{ secrets.RAILWAY_API_KEY }}
-
-      - name: Deploy to Railway
-        run: |
-          railway up --env production
-
-      - name: Restart Railway app
-        run: |
-          railway restart
