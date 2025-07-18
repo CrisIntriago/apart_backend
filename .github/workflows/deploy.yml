@@ -19,31 +19,19 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Check out code
-        uses: actions/checkout@v2
+      - name: Install uv python manager
+        run: pip install uv
 
-      - name: Set up Python
-        uses: actions/setup-python@v2
-        with:
-          python-version: '3.12.x'
-
-      - name: Install dependencies
+      - name: Run tests with uv
         run: |
-          python -m pip install --upgrade pip
-          pip install -r requirements.txt
+          uv sync
+          uv run manage.py test
 
       - name: Set up Railway CLI
         run: |
-          curl -sSL https://railway.app/cli.sh | sh
+          curl -sSL https://railway.app/cli.sh -o railway-cli.sh
+          bash railway-cli.sh
           railway login --apiKey ${{ secrets.RAILWAY_API_KEY }}
-
-      - name: Run migrations
-        run: |
-          python manage.py migrate --noinput
-
-      - name: Collect static files
-        run: |
-          python manage.py collectstatic --noinput
 
       - name: Deploy to Railway
         run: |
