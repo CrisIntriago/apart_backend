@@ -34,8 +34,9 @@ DEBUG = env.bool("DEBUG", default=True)
 ALLOWED_HOSTS = [
     "localhost",
     "127.0.0.1",
-    "apart.us-east-1.elasticbeanstalk.com",
+    "apartbackend-production.up.railway.app",
     "study-apart.com",
+    "apart-frontend-application.vercel.app",
 ]
 
 # Application definition
@@ -215,8 +216,6 @@ STATIC_ROOT = os.path.join(BASE_DIR, "staticfiles")
 
 
 CORS_ALLOWED_ORIGINS = [
-    "http://localhost:3000",
-    "http://127.0.0.1:3000",
     "https://apart-frontend-application.vercel.app",
 ]
 
