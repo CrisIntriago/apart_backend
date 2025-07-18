@@ -19,12 +19,14 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      - name: Check out code
+        uses: actions/checkout@v2
+
       - name: Install uv python manager
         run: pip install uv
 
       - name: Run tests with uv
         run: |
-          cd apart-backend
           uv sync
           uv run manage.py test
 
