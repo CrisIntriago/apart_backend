@@ -24,6 +24,7 @@ jobs:
 
       - name: Run tests with uv
         run: |
+          cd apart-backend
           uv sync
           uv run manage.py test
 
