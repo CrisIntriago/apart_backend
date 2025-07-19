@@ -12,7 +12,6 @@ env:
   DB_USER: ${{ secrets.DB_USER }}
   DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
   DB_PORT: ${{ secrets.DB_PORT }}
-  RAILWAY_API_KEY: ${{ secrets.RAILWAY_API_KEY }}
 
 jobs:
   deploy:
