@@ -36,6 +36,7 @@ ALLOWED_HOSTS = [
     "apartbackend-production.up.railway.app",
     "study-apart.com",
     "apart-frontend-application.vercel.app",
+    "127.0.0.1"
 ]
 
 if DEBUG:
@@ -60,6 +61,7 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
+    "whitenoise.runserver_nostatic",
     "knox",
     "apart",
     "users",
@@ -216,11 +218,14 @@ STATIC_URL = "static/"
 STATICFILES_DIRS = [
     os.path.join(BASE_DIR, "static"),
 ]
-STATIC_ROOT = os.path.join(BASE_DIR, "staticfiles")
+STATIC_ROOT = os.path.join(BASE_DIR, "static")
+STATICFILES_STORAGE="whitenoise.storage.CompressedManifestStaticFilesStorage"
 
 
 CORS_ALLOWED_ORIGINS = [
     "https://apart-frontend-application.vercel.app",
+    "http://localhost:3000",
+    "https://www.study-apart.com"
 ]
 
 UNFOLD = {
