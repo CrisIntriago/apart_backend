@@ -21,10 +21,13 @@ jobs:
       - name: Check out code
         uses: actions/checkout@v2
 
-      - name: Install uv python manager
-        run: pip install uv
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
 
-      - name: Run tests with uv
-        run: |
-          uv sync
-          uv run manage.py test
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Run tests
+        run: python manage.py test
