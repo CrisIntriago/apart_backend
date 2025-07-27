@@ -19,15 +19,16 @@ class Person(models.Model):
         blank=True,
     )
     national_id = models.CharField(max_length=10, unique=True)
-    first_name = models.CharField(max_length=100)
-    last_name = models.CharField(max_length=100)
-    date_of_birth = models.DateField(null=True, blank=True)
+    first_name = models.CharField(max_length=100, default="")
+    last_name = models.CharField(max_length=100, default="")
+    date_of_birth = models.DateField(default=None)
     photo = models.ImageField(
         upload_to="people/photos/",
         null=True,
         blank=True,
     )
-    country = models.CharField(max_length=100, null=True, blank=True)
+    country = models.CharField(max_length=100, default="")
+    languages = models.JSONField(default=list)
 
     def __str__(self):
         return f"{self.first_name} {self.last_name}"
