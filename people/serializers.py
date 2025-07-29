@@ -1,5 +1,6 @@
 from rest_framework import serializers
 
+from content.serializers import CourseSerializer
 from languages.serializers import LanguageSerializer
 from people.models import Person, StudentLanguageProficiency
 
@@ -36,7 +37,8 @@ class StudentProfileSerializer(ProfileSerializer):
         read_only=True,
         source="student.language_proficiencies",
     )
+    course = CourseSerializer(read_only=True, source="student.course")
 
     class Meta(ProfileSerializer.Meta):
         model = Person
-        fields = ProfileSerializer.Meta.fields + ("languages",)
+        fields = ProfileSerializer.Meta.fields + ("languages", "course")

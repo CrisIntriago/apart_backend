@@ -4,6 +4,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from activities.serializers import ActivitySerializer
+from people.serializers import StudentProfileSerializer
 
 from .models import Course
 from .serializers import CourseSerializer, ModuleSerializer
@@ -42,5 +43,20 @@ class CourseModuleActivitiesView(APIView):
         activities = module.activities.all()
         serializer = ActivitySerializer(
             activities, many=True, context={"request": request}
+        )
+        return Response(serializer.data)
+
+
+class CourseStudentsView(APIView):
+    @extend_schema(
+        summary="Obtener los estudiantes de un curso",
+        responses=StudentProfileSerializer(many=True),
+    )
+    def get(self, request, pk):
+        course = get_object_or_404(Course, pk=pk)
+        students = course.students.select_related("person").all()
+        persons = [student.person for student in students if student.person]
+        serializer = StudentProfileSerializer(
+            persons, many=True, context={"request": request}
         )
         return Response(serializer.data)
