@@ -48,6 +48,14 @@ class Student(models.Model):
         blank=True,
     )
 
+    course = models.ForeignKey(
+        "content.Course",
+        on_delete=models.SET_NULL,
+        related_name="students",
+        null=True,
+        blank=True,
+    )
+
     def __str__(self):
         return f"{self.person.first_name} {self.person.last_name} (Student)"
 
