@@ -33,12 +33,22 @@ DEBUG = env.bool("DEBUG", default=True)
 
 ALLOWED_HOSTS = [
     "localhost",
-    "127.0.0.1",
-    "apart.us-east-1.elasticbeanstalk.com",
+    "apartbackend-production.up.railway.app",
     "study-apart.com",
+    "apart-frontend-application.vercel.app",
+    "127.0.0.1"
 ]
 
-# Application definition
+if DEBUG:
+    SECURE_SSL_REDIRECT = False
+    SESSION_COOKIE_SECURE = False
+    CSRF_COOKIE_SECURE = False
+else:
+    SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+    SECURE_SSL_REDIRECT = True
+    SESSION_COOKIE_SECURE = True
+    CSRF_COOKIE_SECURE = True
+
 
 INSTALLED_APPS = [
     "unfold",
@@ -51,6 +61,7 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
+    "whitenoise.runserver_nostatic",
     "knox",
     "apart",
     "users",
@@ -66,6 +77,7 @@ INSTALLED_APPS = [
 MIDDLEWARE = [
     "corsheaders.middleware.CorsMiddleware",
     "django.middleware.security.SecurityMiddleware",
+    "whitenoise.middleware.WhiteNoiseMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
@@ -73,11 +85,6 @@ MIDDLEWARE = [
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
 ]
-
-## Configuraciones de seguridad relacionadas con SSL y proxy
-SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
-SECURE_SSL_REDIRECT = True
-
 
 ROOT_URLCONF = "apart.urls"
 
@@ -198,6 +205,14 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 # Custom user model
 AUTH_USER_MODEL = "users.User"
 
+
+# Authentication backends
+AUTHENTICATION_BACKENDS = [
+    "users.backends.EmailBackend",
+    "django.contrib.auth.backends.ModelBackend",
+]
+
+
 # In development, you may also need to add directories where static files are located
 
 # Static files (CSS, JavaScript, Images)
@@ -212,12 +227,13 @@ STATICFILES_DIRS = [
     os.path.join(BASE_DIR, "static"),
 ]
 STATIC_ROOT = os.path.join(BASE_DIR, "staticfiles")
+STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
 
 
 CORS_ALLOWED_ORIGINS = [
-    "http://localhost:3000",
-    "http://127.0.0.1:3000",
     "https://apart-frontend-application.vercel.app",
+    "http://localhost:3000",
+    "https://www.study-apart.com"
 ]
 
 UNFOLD = {
