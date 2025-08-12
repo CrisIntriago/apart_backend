@@ -1,6 +1,8 @@
+from django import forms
 from django.contrib import admin
 from unfold.admin import ModelAdmin, TabularInline
 
+from content.models import Module as ContentModule
 from utils.enums import ActivityType
 
 from .models.base import Activity
@@ -8,6 +10,29 @@ from .models.choice import Choice, ChoiceActivity
 from .models.fill_in_the_blank import FillInTheBlankActivity
 from .models.matching import MatchingActivity, MatchingPair
 from .models.word_ordering import WordOrderingActivity
+
+
+class ModuleLockedWidget(forms.HiddenInput):
+    pass
+
+
+class ModulePresetMixin:
+    def formfield_for_foreignkey(self, db_field, request, **kwargs):
+        if db_field.name == "module":
+            module_id = request.GET.get("module") or request.POST.get("module")
+            if module_id:
+                kwargs["initial"] = module_id
+                kwargs["queryset"] = ContentModule.objects.filter(pk=module_id)
+            else:
+                kwargs["queryset"] = ContentModule.objects.all()
+        return super().formfield_for_foreignkey(db_field, request, **kwargs)
+
+    def get_form(self, request, obj=None, **kwargs):
+        form = super().get_form(request, obj, **kwargs)
+        module_id = request.GET.get("module") or request.POST.get("module")
+        if module_id and "module" in form.base_fields and obj is None:
+            form.base_fields["module"].widget = ModuleLockedWidget()
+        return form
 
 
 @admin.register(Activity)
@@ -34,7 +59,7 @@ class ChoiceInline(TabularInline):
 
 
 @admin.register(ChoiceActivity)
-class ChoiceActivityAdmin(ModelAdmin):
+class ChoiceActivityAdmin(ModulePresetMixin, ModelAdmin):
     list_display = ("title", "is_multiple", "difficulty", "created_at")
     search_fields = ("title",)
     list_filter = ("is_multiple", "difficulty")
@@ -46,7 +71,7 @@ class ChoiceActivityAdmin(ModelAdmin):
 
 
 @admin.register(FillInTheBlankActivity)
-class FillInTheBlankActivityAdmin(ModelAdmin):
+class FillInTheBlankActivityAdmin(ModulePresetMixin, ModelAdmin):
     list_display = ("title", "short_text", "difficulty", "created_at")
     search_fields = ("title", "text")
     ordering = ("-created_at",)
@@ -60,7 +85,7 @@ class FillInTheBlankActivityAdmin(ModelAdmin):
     short_text.short_description = "Texto"
 
 
-class MatchingPairInline(TabularInline):
+class MatchingPairInline(ModulePresetMixin, TabularInline):
     model = MatchingPair
     extra = 2
     min_num = 1
@@ -69,7 +94,7 @@ class MatchingPairInline(TabularInline):
 
 
 @admin.register(MatchingActivity)
-class MatchingActivityAdmin(ModelAdmin):
+class MatchingActivityAdmin(ModulePresetMixin, ModelAdmin):
     list_display = ("title", "difficulty", "created_at")
     search_fields = ("title",)
     ordering = ("-created_at",)
@@ -80,7 +105,7 @@ class MatchingActivityAdmin(ModelAdmin):
 
 
 @admin.register(WordOrderingActivity)
-class WordOrderingActivityAdmin(ModelAdmin):
+class WordOrderingActivityAdmin(ModulePresetMixin, ModelAdmin):
     list_display = ("title", "short_sentence", "difficulty", "created_at")
     search_fields = ("title", "sentence")
     ordering = ("-created_at",)

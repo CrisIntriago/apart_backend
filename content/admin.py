@@ -1,20 +1,103 @@
 from django.contrib import admin
+from django.urls import reverse
+from django.utils.safestring import mark_safe
 from unfold.admin import ModelAdmin, TabularInline
 
+from activities.models.base import Activity
+from activities.models.choice import ChoiceActivity
+from activities.models.fill_in_the_blank import FillInTheBlankActivity
+from activities.models.matching import MatchingActivity
+from activities.models.word_ordering import WordOrderingActivity
+
 from .models import Course, Module
+
+
+class ReadonlyActivityInlineBase(TabularInline):
+    extra = 0
+    can_delete = False
+    show_change_link = True
+    fields = ("title", "difficulty", "created_at")
+    readonly_fields = fields
+
+    def has_add_permission(self, request, obj=None):
+        return False
+
+    def get_queryset(self, request):
+        qs = super().get_queryset(request)
+        return qs.order_by("-created_at")
+
+
+class ChoiceActivityInline(ReadonlyActivityInlineBase):
+    model = ChoiceActivity
+
+
+class FillInTheBlankActivityInline(ReadonlyActivityInlineBase):
+    model = FillInTheBlankActivity
+
+
+class MatchingActivityInline(ReadonlyActivityInlineBase):
+    model = MatchingActivity
+
+
+class WordOrderingActivityInline(ReadonlyActivityInlineBase):
+    model = WordOrderingActivity
+
+
+@admin.register(Module)
+class ModuleAdmin(ModelAdmin):
+    list_display = ("name", "course", "activities_count")
+    fields = ("course", "name", "description", "image", "difficulty", "add_activities")
+    readonly_fields = ("add_activities",)
+    inlines = [
+        ChoiceActivityInline,
+        FillInTheBlankActivityInline,
+        MatchingActivityInline,
+        WordOrderingActivityInline,
+    ]
+
+    def activities_count(self, obj):
+        return Activity.objects.filter(module=obj).count()
+
+    activities_count.short_description = "Actividades"
+
+    def add_activities(self, obj):
+        if not obj or not obj.pk:
+            return "Guarda el módulo para ver opciones de creación."
+        links = [
+            (
+                "➕ Opción múltiple",
+                reverse("admin:activities_choiceactivity_add") + f"?module={obj.pk}",
+            ),
+            (
+                "➕ Completar espacios",
+                reverse("admin:activities_fillintheblankactivity_add")
+                + f"?module={obj.pk}",
+            ),
+            (
+                "➕ Emparejamiento",
+                reverse("admin:activities_matchingactivity_add") + f"?module={obj.pk}",
+            ),
+            (
+                "➕ Ordenar palabras",
+                reverse("admin:activities_wordorderingactivity_add")
+                + f"?module={obj.pk}",
+            ),
+        ]
+        html = "<br>".join(
+            f'<a class="button" href="{url}">{label}</a>' for label, url in links
+        )
+        return mark_safe(html)
+
+    add_activities.short_description = "Crear nuevas actividades (en otra página)"
 
 
 class ModuleInline(TabularInline):
     model = Module
     extra = 1
+    show_change_link = True
 
 
 @admin.register(Course)
 class CourseAdmin(ModelAdmin):
     list_display = ("name",)
     inlines = [ModuleInline]
-
-
-@admin.register(Module)
-class ModuleAdmin(ModelAdmin):
-    list_display = ("name", "course")
