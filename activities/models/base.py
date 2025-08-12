@@ -44,16 +44,21 @@ class Activity(models.Model):
 class UserAnswer(models.Model):
     class Meta:
         db_table = "user_answer"
+        indexes = [
+            models.Index(fields=["answered_at"]),
+            models.Index(fields=["user", "activity"]),
+        ]
 
     user = models.ForeignKey(
-        User,
+        User, on_delete=models.CASCADE, related_name="answers", blank=True, null=True
+    )
+    activity = models.ForeignKey(
+        Activity,
         on_delete=models.CASCADE,
         related_name="answers",
-        blank=True,
         null=True,
+        blank=True,
     )
-    activity_type = models.CharField(max_length=50)
-    activity_id = models.PositiveIntegerField()
     response_data = models.JSONField()
     is_correct = models.BooleanField()
     answered_at = models.DateTimeField(auto_now_add=True)
