@@ -1,18 +1,15 @@
-from django.db.models import Count, F, Sum, Window
-from django.db.models.functions import Rank
-from drf_spectacular.utils import OpenApiExample, extend_schema
+from drf_spectacular.utils import OpenApiExample, OpenApiParameter, extend_schema
 from rest_framework import serializers, status
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from activities.models.base import Activity, UserAnswer
+from activities.models.base import Activity
 from activities.serializers import (
     ActivitySerializer,
     LeaderboardEntrySerializer,
     UserAnswerSerializer,
 )
-from activities.services import AnswerSubmissionService
-from users.models import User
+from activities.services import AnswerSubmissionService, LeaderboardService
 
 
 class ActivityListView(APIView):
@@ -74,66 +71,44 @@ class LeaderboardTop10View(APIView):
     @extend_schema(
         summary="Top 10 de estudiantes por puntuación",
         description=(
-            "Retorna los 10 estudiantes con mayor puntaje acumulado. "
-            "Una actividad aporta sus puntos una sola vez por usuario, "
-            "siempre que exista al menos una respuesta válida (is_correct=True). "
-            "Siempre retorna la posición del usuario autenticado."
+            "Permite filtrar por ventana de tiempo (day, week, month, all) "
+            "y por módulo (module_id)."
         ),
+        parameters=[
+            OpenApiParameter(
+                name="time_window",
+                required=False,
+                description="day|week|month|all",
+                type=str,
+            ),
+            OpenApiParameter(
+                name="module_id", required=False, description="ID del módulo", type=int
+            ),
+        ],
         responses={200: LeaderboardEntrySerializer(many=True)},
     )
     def get(self, request):
-        user = request.user if request.user.is_authenticated else None
+        user_id = request.user.id if request.user.is_authenticated else None
+        time_window = request.query_params.get("time_window", "all")
+        module_id = request.query_params.get("module_id")
 
-        pairs = (
-            UserAnswer.objects.filter(is_correct=True)
-            .values("user", "activity")
-            .distinct()
-            .annotate(points=F("activity__points"))
-        )
-
-        leaderboard_all = (
-            pairs.values("user")
-            .annotate(
-                total_points=Sum("points"),
-                activities_count=Count("activity"),
+        module_id = (
+            int(module_id)
+            if module_id
+            not in (
+                None,
+                "",
             )
-            .annotate(
-                position=Window(
-                    expression=Rank(),
-                    order_by=(F("total_points").desc(), F("user").asc()),
-                )
-            )
-            .order_by(F("total_points").desc(), F("user").asc())
+            else None
         )
 
-        top10 = list(leaderboard_all[:10])
-
-        extra_row = None
-        if user:
-            in_top = any(r["user"] == user.id for r in top10)
-            if not in_top:
-                extra_row = leaderboard_all.filter(user=user.id).first()
-                if extra_row:
-                    top10.append(extra_row)
-
-        user_ids = [r["user"] for r in top10]
-        users = User.objects.filter(id__in=user_ids).only(
-            "id", "username", "first_name", "last_name"
+        service = LeaderboardService(
+            request_user_id=user_id,
+            limit=10,
+            time_window=time_window,
+            module_id=module_id,
         )
-        users_map = {u.id: u for u in users}
-
-        payload = []
-        for row in top10:
-            u = users_map.get(row["user"])
-            payload.append({
-                "user_id": row["user"],
-                "username": getattr(u, "username", ""),
-                "full_name": f"{u.first_name} {u.last_name}".strip() if u else "",
-                "total_points": row["total_points"] or 0,
-                "activities_count": row["activities_count"],
-                "position": row["position"],
-            })
-
+        payload = service.execute()
         return Response(
             LeaderboardEntrySerializer(payload, many=True).data,
             status=status.HTTP_200_OK,
