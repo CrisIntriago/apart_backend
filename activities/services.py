@@ -44,7 +44,6 @@ class AnswerSubmissionService:
     def _save_user_answer(self, activity, response_data, is_correct):
         return UserAnswer.objects.create(
             user=self.user,
-            activity_type=activity.type,
             activity=activity,
             response_data=response_data,
             is_correct=is_correct,
