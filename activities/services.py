@@ -38,7 +38,7 @@ class AnswerSubmissionService:
         return UserAnswer.objects.create(
             user=self.user,
             activity_type=activity.type,
-            activity_id=activity.id,
+            activity=activity,
             response_data=response_data,
             is_correct=is_correct,
         )
