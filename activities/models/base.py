@@ -25,6 +25,9 @@ class Activity(models.Model):
         default=ActivityType.CHOICE,
         help_text="Tipo de actividad",
     )
+    points = models.PositiveIntegerField(
+        default=0, help_text="Cantidad de puntos que otorga la actividad"
+    )
     created_at = models.DateTimeField(auto_now_add=True)
     module = models.ForeignKey(
         Module,

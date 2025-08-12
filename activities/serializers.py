@@ -64,3 +64,12 @@ class UserAnswerSerializer(serializers.ModelSerializer):
     class Meta:
         model = UserAnswer
         fields = ["is_correct"]
+
+
+class LeaderboardEntrySerializer(serializers.Serializer):
+    user_id = serializers.IntegerField()
+    username = serializers.CharField()
+    full_name = serializers.CharField()
+    total_points = serializers.IntegerField()
+    activities_count = serializers.IntegerField()
+    position = serializers.IntegerField()
