@@ -18,7 +18,6 @@ class Person(models.Model):
         null=True,
         blank=True,
     )
-    national_id = models.CharField(max_length=10, unique=True)
     first_name = models.CharField(max_length=100, default="")
     last_name = models.CharField(max_length=100, default="")
     date_of_birth = models.DateField(default=None)

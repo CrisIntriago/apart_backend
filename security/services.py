@@ -14,7 +14,6 @@ def register_user(validated_data):
     
     Person.objects.create(
         user=user,
-        national_id=validated_data["national_id"],
         first_name=validated_data["first_name"],
         last_name=validated_data["last_name"],
         date_of_birth=validated_data["date_of_birth"],

@@ -6,6 +6,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from .serializers import LoginSerializer, RegisterSerializer
+from content.serializers import CourseSerializer
 from .services import login_user, register_token, register_user
 
 
@@ -31,7 +32,6 @@ class RegisterView(APIView):
                     "email": user.email,
                     "first_name": user.person.first_name,
                     "last_name": user.person.last_name,
-                    "national_id": user.person.national_id,
                     "country": user.person.country,
                     "date_of_birth": user.person.date_of_birth,
                     "languages": user.person.languages,
@@ -58,6 +58,12 @@ class LoginView(APIView):
         user = serializer.validated_data["user"]
         login(request, user)
         token = login_user(user)
+        courses_data = []
+        person = getattr(user, "person", None)
+        student = getattr(person, "student", None) if person else None
+        if student and getattr(student, "course", None):
+            courses_data = CourseSerializer([student.course], many=True).data
+
         return Response(
             {
                 "user": {
@@ -67,10 +73,10 @@ class LoginView(APIView):
                     "phone": user.phone,
                     "first_name": user.person.first_name,
                     "last_name": user.person.last_name,
-                    "national_id": user.person.national_id,
                     "country": user.person.country,
                     "date_of_birth": user.person.date_of_birth,
                     "languages": user.person.languages,
+                    "courses": courses_data,
                 },
                 "token": token,
             },

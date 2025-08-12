@@ -8,7 +8,6 @@ class RegisterSerializer(serializers.ModelSerializer):
     password = serializers.CharField(write_only=True)
     first_name = serializers.CharField(write_only=True)
     last_name = serializers.CharField(write_only=True)
-    national_id = serializers.CharField(write_only=True)
     country = serializers.CharField(write_only=True)
     date_of_birth = serializers.DateField(write_only=True)
     languages = serializers.ListField(
@@ -22,7 +21,7 @@ class RegisterSerializer(serializers.ModelSerializer):
         model = User
         fields = [
             "username", "email", "password", "first_name", "last_name",
-            "national_id", "country", "date_of_birth", "languages",
+            "country", "date_of_birth", "languages",
         ]
 
 
