@@ -5,7 +5,8 @@ from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from .serializers import LoginSerializer, RegisterSerializer
+from users.models import User
+from .serializers import LoginSerializer, RegisterSerializer, EmailValidationSerializer
 from content.serializers import CourseSerializer
 from .services import login_user, register_token, register_user
 
@@ -82,3 +83,21 @@ class LoginView(APIView):
             },
             status=status.HTTP_200_OK,
         )
+    
+
+class ValidateEmailView(APIView):
+    permission_classes = [AllowAny]
+
+    @extend_schema(
+        request=EmailValidationSerializer,
+        responses={200: {"description": "Indica si el email existe o no"}},
+        summary="Validar email",
+        description="Verifica si un correo electrónico ya está registrado en el sistema.",
+        auth=[]
+    )
+    def post(self, request):
+        serializer = EmailValidationSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        email = serializer.validated_data["email"]
+        exists = User.objects.filter(email__iexact=email).exists()
+        return Response({"exists": exists}, status=status.HTTP_200_OK)

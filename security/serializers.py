@@ -25,6 +25,10 @@ class RegisterSerializer(serializers.ModelSerializer):
         ]
 
 
+class EmailValidationSerializer(serializers.Serializer):
+    email = serializers.EmailField()
+
+
 class LoginSerializer(serializers.Serializer):
     email = serializers.EmailField() 
     password = serializers.CharField()
