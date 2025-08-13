@@ -30,7 +30,17 @@ class CourseSerializer(serializers.ModelSerializer):
 class ExamSerializer(serializers.ModelSerializer):
     class Meta:
         model = Exam
-        fields = "__all__"
+        fields = (
+            "id",
+            "course",
+            "type",
+            "title",
+            "description",
+            "is_published",
+            "time_limit_minutes",
+            "attempts_allowed",
+            "pass_mark_percent",
+        )
 
 
 class AnswerInputItemSerializer(serializers.Serializer):
@@ -86,7 +96,6 @@ class FinishAttemptRequestSerializer(serializers.Serializer):
 
 class FinishAttemptResponseSerializer(serializers.ModelSerializer):
     attempt_id = serializers.IntegerField(source="id", read_only=True)
-    exam_id = serializers.IntegerField(source="exam_id", read_only=True)
     percentage = serializers.FloatField(read_only=True)
 
     class Meta:
