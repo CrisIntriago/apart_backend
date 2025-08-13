@@ -8,7 +8,6 @@ from django.shortcuts import get_object_or_404
 from django.utils import timezone
 
 from activities.models.base import Activity, UserAnswer
-from activities.models.matching import MatchingActivity
 from activities.strategies.validation.registry import ValidationStrategyRegistry
 from content.models import Vocabulary
 from people.models import Person, Student
@@ -29,11 +28,7 @@ class AnswerSubmissionService:
         user_answer = self._save_user_answer(
             activity, serializer.validated_data, is_correct
         )
-        transaction.on_commit(
-            lambda: self._create_vocabulary_if_applicable(
-                activity, serializer.validated_data
-            )
-        )
+        transaction.on_commit(lambda: self._create_vocabulary_if_applicable(activity))
         return user_answer
 
     def _get_activity(self):
@@ -63,36 +58,34 @@ class AnswerSubmissionService:
             exam_attempt=self.exam_attempt,
         )
 
-    def _create_vocabulary_if_applicable(self, activity: Activity, data: dict):
+    def _create_vocabulary_if_applicable(self, activity: Activity):
         if activity.type != ActivityType.MATCH:
             return
-        if not isinstance(activity, MatchingActivity):
-            activity = MatchingActivity.objects.get(pk=activity.pk)
 
         try:
-            student = Student.objects.get(user=self.user)
+            student = Student.objects.only("id").get(user=self.user)
         except Student.DoesNotExist:
             return
 
-        vocab_pairs = activity.pairs.filter(is_vocabulary=True).only(
-            "id", "left", "right"
-        )
-        by_left_id = {p.id: p for p in vocab_pairs}
-
-        pairs = data.get("pairs", [])
-        to_create = []
-        for item in pairs:
-            left_id = item.get("left_id")
-            mp = by_left_id.get(left_id)
-            if not mp:
-                continue
-            to_create.append(
-                Vocabulary(student=student, word=mp.left, meaning=mp.right)
-            )
-
-        if not to_create:
+        pairs_qs = activity.pairs.filter(is_vocabulary=True).values("left", "right")
+        if not pairs_qs:
             return
-        Vocabulary.objects.bulk_create(to_create, ignore_conflicts=True)
+
+        vocab_to_create = [
+            Vocabulary(
+                student=student,
+                word=row["left"],
+                meaning=row["right"],
+                difficulty=activity.difficulty,
+            )
+            for row in pairs_qs
+        ]
+
+        if not vocab_to_create:
+            return
+
+        with transaction.atomic():
+            Vocabulary.objects.bulk_create(vocab_to_create, ignore_conflicts=True)
 
     @classmethod
     @transaction.atomic
