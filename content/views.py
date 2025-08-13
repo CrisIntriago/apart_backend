@@ -3,6 +3,7 @@ from django.shortcuts import get_object_or_404
 from django.utils import timezone
 from drf_spectacular.utils import (
     OpenApiExample,
+    OpenApiParameter,
     extend_schema,
 )
 from rest_framework import permissions, status
@@ -110,6 +111,30 @@ class CourseExamsView(APIView):
 class StartAttemptView(APIView):
     permission_classes = [permissions.IsAuthenticated]
 
+    @extend_schema(
+        summary="Iniciar intento de examen",
+        description="Crea un nuevo intento para un examen si el usuario aún tiene intentos disponibles.",  # noqa: E501
+        parameters=[
+            OpenApiParameter(
+                name="exam_id",
+                type=int,
+                location=OpenApiParameter.PATH,
+                description="ID del examen",
+            )
+        ],
+        responses={
+            201: {
+                "example": {
+                    "attempt_id": 12,
+                    "attempt_number": 1,
+                    "time_limit_minutes": 30,
+                    "status": "IN_PROGRESS",
+                    "started_at": "2025-08-12T14:30:00Z",
+                }
+            },
+            400: {"example": {"detail": "No attempts remaining."}},
+        },
+    )
     def post(self, request, exam_id: int):
         exam = Exam.objects.get(pk=exam_id)
         user = request.user
