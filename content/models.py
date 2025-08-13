@@ -53,6 +53,11 @@ class Module(models.Model):
         default=DifficultyLevel.MEDIUM,
         blank=True,
     )
+    end_date = models.DateTimeField(
+        null=True,
+        blank=True,
+        help_text="Fecha y hora en que finaliza el módulo",
+    )
 
     def __str__(self):
         return f"{self.course.name} - {self.name}"
