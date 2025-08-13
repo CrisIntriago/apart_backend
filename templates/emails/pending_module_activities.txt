@@ -1,0 +1,18 @@
+Hello {{ first_name }},
+
+Here are your pending activities for the module “{{ module_name }}” in the course “{{ course_name }}”:
+
+{% for a in activities %}
+- {{ a.title }} ({{ a.type_display }})
+{% endfor %}
+
+Deadline: {{ deadline }}
+
+{% if module_url %}
+Access the module here: {{ module_url }}
+{% endif %}
+
+Please complete them before the module end date.
+
+Regards,
+{{ app_name }}
