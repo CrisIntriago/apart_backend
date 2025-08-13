@@ -4,6 +4,7 @@ from django.utils import timezone
 from drf_spectacular.utils import (
     OpenApiExample,
     OpenApiParameter,
+    OpenApiTypes,
     extend_schema,
 )
 from rest_framework import permissions, status
@@ -184,6 +185,44 @@ class ExamActivitiesView(APIView):
     def get_object(self, exam_id):
         return get_object_or_404(Exam, pk=exam_id, is_published=True)
 
+    @extend_schema(
+        summary="Obtener actividades de un examen",
+        description="Devuelve la lista de actividades asociadas a un examen publicado. Usa `shuffle` para barajar el orden.",  # noqa: E501
+        parameters=[
+            OpenApiParameter(
+                name="shuffle",
+                type=OpenApiTypes.BOOL,
+                location=OpenApiParameter.QUERY,
+                required=False,
+                description='Si es true, retorna las actividades en orden aleatorio. Acepta "1/true/True".',  # noqa: E501
+            ),
+        ],
+        responses=ExamActivityItemSerializer(many=True),
+        examples=[
+            OpenApiExample(
+                "Ejemplo",
+                value={
+                    "activity": {
+                        "id": 101,
+                        "type": "choice",
+                        "title": "Select the correct option",
+                        "instructions": "Choose one answer.",
+                        "difficulty": "medium",
+                        "created_at": "2025-08-13T00:51:52.839102Z",
+                        "payload": {
+                            "choices": [
+                                {"id": 1, "text": "Option A"},
+                                {"id": 2, "text": "Option B"},
+                            ],
+                            "is_multiple": False,
+                        },
+                    },
+                    "required": True,
+                    "position": 0,
+                },
+            )
+        ],
+    )
     def get(self, request, exam_id: int):
         exam = self.get_object(exam_id)
         self.check_object_permissions(request, exam)
