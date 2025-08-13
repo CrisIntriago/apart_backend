@@ -36,7 +36,7 @@ ALLOWED_HOSTS = [
     "apartbackend-production.up.railway.app",
     "study-apart.com",
     "apart-frontend-application.vercel.app",
-    "127.0.0.1"
+    "127.0.0.1",
 ]
 
 if DEBUG:
@@ -44,7 +44,7 @@ if DEBUG:
     SESSION_COOKIE_SECURE = False
     CSRF_COOKIE_SECURE = False
 else:
-    SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+    SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
     SECURE_SSL_REDIRECT = True
     SESSION_COOKIE_SECURE = True
     CSRF_COOKIE_SECURE = True
@@ -233,7 +233,7 @@ STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
 CORS_ALLOWED_ORIGINS = [
     "https://apart-frontend-application.vercel.app",
     "http://localhost:3000",
-    "https://www.study-apart.com"
+    "https://www.study-apart.com",
 ]
 
 UNFOLD = {
@@ -242,3 +242,14 @@ UNFOLD = {
     "SHOW_COUNTS": True,
     "DARK_MODE": False,
 }
+
+
+EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
+EMAIL_HOST = "smtp.gmail.com"
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
+
+EMAIL_HOST_USER = env("EMAIL_HOST_USER")
+EMAIL_HOST_PASSWORD = env("EMAIL_HOST_PASSWORD")
+
+DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
