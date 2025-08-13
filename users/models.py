@@ -1,3 +1,5 @@
+import uuid
+
 from django.contrib.auth.models import AbstractUser
 from django.db import models
 
@@ -9,10 +11,30 @@ class User(AbstractUser):
         db_table = "users"
 
     phone = models.CharField(max_length=15, blank=True, null=True)
-    email = models.EmailField(unique=True)  
+    email = models.EmailField(unique=True)
 
     USERNAME_FIELD = "email"
-    REQUIRED_FIELDS = ["username"] 
+    REQUIRED_FIELDS = ["username"]
 
     def __str__(self):
         return self.email
+
+
+class UserToken(models.Model):
+    class Type(models.TextChoices):
+        ACTIVATION = "activate", "Account Activation"
+        RECOVERY = "recover", "Password Recovery"
+        VERIFICATION = "verify", "Email Verification"
+
+    user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True)
+    type = models.CharField(
+        max_length=20, choices=Type.choices, default=Type.ACTIVATION
+    )
+    token = models.UUIDField(
+        primary_key=True, default=uuid.uuid4, unique=True, editable=False
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+    used = models.BooleanField(default=False)
+
+    class Meta:
+        db_table = "user_token"
