@@ -19,6 +19,11 @@ dependencies = [
     "django-cors-headers>=4.7.0",
     "django-unfold>=0.60.0",
     "pillow>=11.2.1",
+    "django-allauth>=65.10.0",
+    "knox>=0.1.14",
+    "whitenoise>=6.9.0",
+    "setuptools>=80.9.0",
+    "cryptography>=45.0.6",
 ]
 
 [tool.ruff]
