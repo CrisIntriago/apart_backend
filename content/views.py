@@ -1,7 +1,10 @@
 from django.db.models import Max
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
-from drf_spectacular.utils import extend_schema
+from drf_spectacular.utils import (
+    OpenApiExample,
+    extend_schema,
+)
 from rest_framework import permissions, status
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -77,8 +80,25 @@ class CourseStudentsView(APIView):
 
 class CourseExamsView(APIView):
     @extend_schema(
-        summary="Obtener los exámenes de un curso",
-        responses=ExamSerializer(many=True),
+        summary="Obtener los exámenes publicados de un curso",
+        responses={200: ExamSerializer(many=True)},
+        examples=[
+            OpenApiExample(
+                name="Respuesta exitosa",
+                value={
+                    "id": 1,
+                    "course": 1,
+                    "type": "MIDTERM",
+                    "title": "Soy examen",
+                    "description": "Upa",
+                    "is_published": True,
+                    "time_limit_minutes": 30,
+                    "attempts_allowed": 1,
+                    "pass_mark_percent": 60,
+                },
+                response_only=True,
+            )
+        ],
     )
     def get(self, request, pk):
         course = get_object_or_404(Course, pk=pk)
