@@ -1,7 +1,11 @@
 from django import forms
-from django.contrib import admin
+from django.contrib import admin, messages
+from django.http import HttpResponseRedirect
+from django.urls import reverse
 from unfold.admin import ModelAdmin, TabularInline
 
+from activities.models.base import ExamActivity
+from content.models import Exam
 from content.models import Module as ContentModule
 from utils.enums import ActivityType
 
@@ -35,6 +39,52 @@ class ModulePresetMixin:
         return form
 
 
+def _admin_change_url_for(model_class, pk):
+    return reverse(
+        f"admin:{model_class._meta.app_label}_{model_class._meta.model_name}_change",
+        args=[pk],
+    )
+
+
+class AttachToExamOnCreateMixin:
+    def _maybe_attach_and_redirect(self, request, obj, default_response):
+        exam_id = request.GET.get("exam") or request.POST.get("exam")
+        if not exam_id:
+            return default_response
+
+        created = False
+        try:
+            _, created = ExamActivity.objects.get_or_create(
+                exam_id=exam_id, activity_id=obj.pk
+            )
+        except Exception as exc:
+            messages.warning(
+                request,
+                f"No se pudo vincular la actividad al examen {exam_id}: {exc}",
+            )
+            return default_response
+
+        if created:
+            messages.success(request, f"Actividad vinculada al examen #{exam_id}.")
+
+        if "_continue" in request.POST or "_addanother" in request.POST:
+            return default_response
+
+        try:
+            exam_change_url = _admin_change_url_for(Exam, exam_id)
+            return HttpResponseRedirect(exam_change_url)
+        except Exception:
+            return default_response
+
+    def response_add(self, request, obj, post_url_continue=None):
+        resp = super().response_add(request, obj, post_url_continue)
+        return self._maybe_attach_and_redirect(request, obj, resp)
+
+    def response_change(self, request, obj):
+        resp = super().response_change(request, obj)
+        return self._maybe_attach_and_redirect(request, obj, resp)
+
+
 @admin.register(Activity)
 class ActivityAdmin(ModelAdmin):
     list_display = ("title", "type", "difficulty", "created_at")
@@ -59,7 +109,7 @@ class ChoiceInline(TabularInline):
 
 
 @admin.register(ChoiceActivity)
-class ChoiceActivityAdmin(ModulePresetMixin, ModelAdmin):
+class ChoiceActivityAdmin(AttachToExamOnCreateMixin, ModulePresetMixin, ModelAdmin):
     list_display = ("title", "is_multiple", "difficulty", "created_at")
     search_fields = ("title",)
     list_filter = ("is_multiple", "difficulty")
@@ -71,7 +121,9 @@ class ChoiceActivityAdmin(ModulePresetMixin, ModelAdmin):
 
 
 @admin.register(FillInTheBlankActivity)
-class FillInTheBlankActivityAdmin(ModulePresetMixin, ModelAdmin):
+class FillInTheBlankActivityAdmin(
+    AttachToExamOnCreateMixin, ModulePresetMixin, ModelAdmin
+):
     list_display = ("title", "short_text", "difficulty", "created_at")
     search_fields = ("title", "text")
     ordering = ("-created_at",)
@@ -94,7 +146,7 @@ class MatchingPairInline(ModulePresetMixin, TabularInline):
 
 
 @admin.register(MatchingActivity)
-class MatchingActivityAdmin(ModulePresetMixin, ModelAdmin):
+class MatchingActivityAdmin(AttachToExamOnCreateMixin, ModulePresetMixin, ModelAdmin):
     list_display = ("title", "difficulty", "created_at")
     search_fields = ("title",)
     ordering = ("-created_at",)
@@ -105,7 +157,9 @@ class MatchingActivityAdmin(ModulePresetMixin, ModelAdmin):
 
 
 @admin.register(WordOrderingActivity)
-class WordOrderingActivityAdmin(ModulePresetMixin, ModelAdmin):
+class WordOrderingActivityAdmin(
+    AttachToExamOnCreateMixin, ModulePresetMixin, ModelAdmin
+):
     list_display = ("title", "short_sentence", "difficulty", "created_at")
     search_fields = ("title", "sentence")
     ordering = ("-created_at",)
