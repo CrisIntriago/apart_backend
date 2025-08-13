@@ -253,7 +253,7 @@ class FinishAttemptAndSubmitAnswersView(APIView):
     @extend_schema(
         tags=["Exams"],
         summary="Finalizar intento y enviar respuestas",
-        description="Recibe las respuestas del usuario para un examen y finaliza el intento.",
+        description="Recibe las respuestas del usuario para un examen y finaliza el intento.",  # noqa: E501
         parameters=[
             OpenApiParameter(
                 name="attempt_id",
