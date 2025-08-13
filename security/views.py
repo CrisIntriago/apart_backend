@@ -1,9 +1,8 @@
-import requests
-from django.contrib.auth import login, get_user_model, authenticate
-from drf_spectacular.utils import extend_schema
 import uuid
+import requests
+
 from django.contrib import messages
-from django.contrib.auth import login
+from django.contrib.auth import get_user_model, login
 from django.shortcuts import redirect, render
 from django.views import View
 from django.views.generic import TemplateView
@@ -20,7 +19,6 @@ from rest_framework.views import APIView
 
 from content.serializers import CourseSerializer
 from users.models import User
-
 from .exceptions import (
     PasswordValidationError,
     TokenExpired,
@@ -31,6 +29,8 @@ from .serializers import (
     LoginSerializer,
     PasswordResetRequestSerializer,
     RegisterSerializer,
+    LoginGoogleSerializer,
+    RegisterGoogleSerializer,
 )
 from .services import PasswordResetService, login_user, register_token, register_user
 
@@ -39,14 +39,16 @@ class RegisterView(APIView):
     permission_classes = [AllowAny]
 
     @extend_schema(
-        request=RegisterSerializer,
+        request={
+            "application/json": RegisterSerializer,
+            "application/json;google": RegisterGoogleSerializer,
+        },
         responses={201: None},
         summary="Registro de usuario",
         description="Registra un nuevo usuario y devuelve su token (puede autenticarse usando google o email)",
     )
     def post(self, request):
         google_token = request.data.get("google_token")
-        #TO-DO: Implement register data into user when using google_token
         if google_token:
             try:
                 url = f"https://oauth2.googleapis.com/tokeninfo?id_token={google_token}"
@@ -55,32 +57,20 @@ class RegisterView(APIView):
 
                 if response.status_code != 200 or "email" not in google_data:
                     return Response({"detail": ("Token de Google no válido.")}, status=status.HTTP_400_BAD_REQUEST)
-
-                email = google_data["email"]
-
-                user, created = get_user_model().objects.get_or_create(email=email)
-
-                if created:
-                    user.username = google_data.get("name", email.split(
-                        '@')[0])
-                    user.save()
-
-                token = register_token(user)
-
                 return Response(
                     {
                         "user": {
-                            "id": user.id,
-                            "username": user.username,
-                            "email": user.email,
-                            "phone": user.phone,
+                            "email": google_data["email"],
+                            "username": google_data["name"],
+                            # TO-DO: Guardar la imagen
+                            "password": User.make_random_password(),
                         },
-                        "token": token,
+                        "token": "notokenyet",
                     },
-                    status=status.HTTP_200_OK,
+                    status=status.HTTP_201_CREATED,
                 )
             except requests.exceptions.RequestException:
-                return Response({"detail": _("Error al verificar el token de Google.")}, status=status.HTTP_400_BAD_REQUEST)
+                return Response({"detail": "Error al verificar el token de Google."}, status=status.HTTP_400_BAD_REQUEST)
 
         serializer = RegisterSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
@@ -130,7 +120,16 @@ class LoginView(APIView):
                 try:
                     user = user_model.objects.get(email=email)
                 except user_model.DoesNotExist:
-                    return Response({"detail": ("No existe un usuario registrado con este email.")}, status=status.HTTP_404_NOT_FOUND)
+                    return Response(
+                        {
+                            "user": {
+                                "username": google_data.get("name", ""),
+                                "email": google_data["email"],
+                                "password": User.make_random_password(),
+                            }
+                        },
+                        status=status.HTTP_404_NOT_FOUND
+                    )
 
                 login(request, user, backend='django.contrib.auth.backends.ModelBackend')
                 token = login_user(user)

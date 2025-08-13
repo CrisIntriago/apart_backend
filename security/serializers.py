@@ -49,22 +49,22 @@ class LoginSerializer(serializers.Serializer):
 class PasswordResetRequestSerializer(serializers.Serializer):
     email = serializers.EmailField()
 
+
 class LoginGoogleSerializer(serializers.Serializer):
-    email = serializers.EmailField()
     google_token = serializers.CharField()
 
     def validate(self, data):
-        user = authenticate(email=data["email"], google_token=data["google_token"])
+        user = authenticate(google_token=data["google_token"])
         if user and user.is_active:
             return {"user": user}
         raise serializers.ValidationError("Invalid credentials")
-    
+
+
 class RegisterGoogleSerializer(serializers.Serializer):
-    email = serializers.EmailField()
     google_token = serializers.CharField()
 
     def validate(self, data):
-        user = authenticate(email=data["email"], google_token=data["google_token"])
+        user = authenticate(google_token=data["google_token"])
         if user and user.is_active:
             return {"user": user}
         raise serializers.ValidationError("Invalid credentials")

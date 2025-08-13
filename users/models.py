@@ -1,10 +1,19 @@
+
 import uuid
+from django.utils.crypto import get_random_string
 
 from django.contrib.auth.models import AbstractUser
 from django.db import models
 
 
 class User(AbstractUser):
+
+    @staticmethod
+    def make_random_password(length=12, allowed_chars="abcdefghjkmnpqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ23456789@#$%^&*()"):
+        """
+        Genera una contraseña aleatoria segura para usuarios OAuth.
+        """
+        return get_random_string(length, allowed_chars)
     class Meta:
         verbose_name = "User"
         verbose_name_plural = "Users"
