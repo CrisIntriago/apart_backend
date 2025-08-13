@@ -22,6 +22,30 @@ class ModuleLockedWidget(forms.HiddenInput):
     pass
 
 
+class TypeLockedMixin:
+    ACTIVITY_TYPE = None
+
+    def get_changeform_initial_data(self, request):
+        data = super().get_changeform_initial_data(request)
+        data = dict(data or {})
+        if self.ACTIVITY_TYPE is not None:
+            data["type"] = self.ACTIVITY_TYPE
+        return data
+
+    def get_form(self, request, obj=None, **kwargs):
+        form = super().get_form(request, obj, **kwargs)
+        if "type" in form.base_fields:
+            form.base_fields["type"].initial = self.ACTIVITY_TYPE
+            form.base_fields["type"].disabled = True
+            form.base_fields["type"].widget = forms.HiddenInput()
+        return form
+
+    def save_model(self, request, obj, form, change):
+        if self.ACTIVITY_TYPE is not None:
+            obj.type = self.ACTIVITY_TYPE
+        super().save_model(request, obj, form, change)
+
+
 class ModulePresetMixin:
     def formfield_for_foreignkey(self, db_field, request, **kwargs):
         if db_field.name == "module":
@@ -111,7 +135,11 @@ class ChoiceInline(TabularInline):
 
 
 @admin.register(ChoiceActivity)
-class ChoiceActivityAdmin(AttachToExamOnCreateMixin, ModulePresetMixin, ModelAdmin):
+class ChoiceActivityAdmin(
+    TypeLockedMixin, AttachToExamOnCreateMixin, ModulePresetMixin, ModelAdmin
+):
+    ACTIVITY_TYPE = ActivityType.CHOICE
+    exclude = ("type",)
     list_display = ("title", "is_multiple", "difficulty", "created_at")
     search_fields = ("title",)
     list_filter = ("is_multiple", "difficulty")
@@ -123,8 +151,13 @@ class ChoiceActivityAdmin(AttachToExamOnCreateMixin, ModulePresetMixin, ModelAdm
 
 
 @admin.register(FillInTheBlankActivity)
-class FillInTheBlankActivityAdmin(ModelAdmin):
+class FillInTheBlankActivityAdmin(
+    TypeLockedMixin, AttachToExamOnCreateMixin, ModulePresetMixin, ModelAdmin
+):
     form = FillInTheBlankActivityForm
+    ACTIVITY_TYPE = ActivityType.FILL
+    exclude = ("type",)
+
     list_display = ("title", "short_text", "difficulty", "created_at")
     search_fields = ("title", "text")
     ordering = ("-created_at",)
@@ -165,7 +198,12 @@ class MatchingPairInline(ModulePresetMixin, TabularInline):
 
 
 @admin.register(MatchingActivity)
-class MatchingActivityAdmin(AttachToExamOnCreateMixin, ModulePresetMixin, ModelAdmin):
+class MatchingActivityAdmin(
+    TypeLockedMixin, AttachToExamOnCreateMixin, ModulePresetMixin, ModelAdmin
+):
+    ACTIVITY_TYPE = ActivityType.MATCH
+    exclude = ("type",)
+
     list_display = ("title", "difficulty", "created_at")
     search_fields = ("title",)
     ordering = ("-created_at",)
@@ -177,8 +215,11 @@ class MatchingActivityAdmin(AttachToExamOnCreateMixin, ModulePresetMixin, ModelA
 
 @admin.register(WordOrderingActivity)
 class WordOrderingActivityAdmin(
-    AttachToExamOnCreateMixin, ModulePresetMixin, ModelAdmin
+    TypeLockedMixin, AttachToExamOnCreateMixin, ModulePresetMixin, ModelAdmin
 ):
+    ACTIVITY_TYPE = ActivityType.ORDER
+    exclude = ("type",)
+
     list_display = ("title", "short_sentence", "difficulty", "created_at")
     search_fields = ("title", "sentence")
     ordering = ("-created_at",)
