@@ -45,8 +45,16 @@ class WordOrderingActivityInline(ReadonlyActivityInlineBase):
 
 @admin.register(Module)
 class ModuleAdmin(ModelAdmin):
-    list_display = ("name", "course", "activities_count")
-    fields = ("course", "name", "description", "image", "difficulty", "add_activities")
+    list_display = ("name", "course", "end_date", "activities_count")
+    fields = (
+        "course",
+        "name",
+        "description",
+        "image",
+        "difficulty",
+        "end_date",
+        "add_activities",
+    )
     readonly_fields = ("add_activities",)
     inlines = [
         ChoiceActivityInline,
