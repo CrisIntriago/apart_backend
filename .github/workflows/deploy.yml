@@ -1,100 +1,30 @@
-#Location: .github/workflows/custom_config.yml
-
-name: CI-CD pipeline to AWS
-env:
-  SECRET_KEY: ${{ secrets.SECRET_KEY }}
-  EB_S3_BUCKET_NAME: "apart-django-deployment"
-  EB_APPLICATION_NAME: "apart-backend"
-  EB_ENVIRONMENT_NAME: "apart-backend-dev"
-  DEPLOY_PACKAGE_NAME: "django-app-${{ github.sha }}.zip"
-  VERSION_NAME: ${{ github.sha }}
-  AWS_REGION_NAME: "us-east-1"
-  DB_HOST: ${{ secrets.DB_HOST }}
-  DB_NAME: ${{ vars.DB_NAME }}
-  DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
-  DB_PORT: ${{ vars.DB_PORT }}
-  DB_USER: ${{ vars.DB_USER }}
-  USE_SQLITE: ${{ vars.USE_SQLITE }}
-  DEBUG: ${{ vars.DEBUG }}
+name: CI/CD Pipeline for Django App on Railway
 
 on:
   push:
     branches:
       - main
+
+env:
+  SECRET_KEY: ${{ secrets.SECRET_KEY }}
+  DB_HOST: ${{ secrets.DB_HOST }}
+  DB_NAME: ${{ secrets.DB_NAME }}
+  DB_USER: ${{ secrets.DB_USER }}
+  DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
+  DB_PORT: ${{ secrets.DB_PORT }}
+
 jobs:
-  build:
-    runs-on: ubuntu-latest
-    environment: production
-    steps:
-      - name: Git clone on our repo
-        uses: actions/checkout@v2
-
-      - name: Set up Python
-        uses: actions/setup-python@v2
-        with:
-          python-version: 3.12
-
-      - name: Install uv
-        run: pip install uv
-
-      - name: Generate requirements.txt
-        run: uv pip compile pyproject.toml -o requirements.txt
-
-      - name: Install dependencies
-        run: |
-          python -m pip install --upgrade pip
-          pip install -r requirements.txt
-
-      - name: Collect static files
-        run: python manage.py collectstatic --noinput
-
-      - name: Create zip deployment package
-        run: zip -r ${{ env.DEPLOY_PACKAGE_NAME }} . -x "*.git*" -x "*.github*"
-
-      - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v1
-        with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: ${{ env.AWS_REGION_NAME }}
-      - name: Copying file to S3
-        run: aws s3 cp ${{ env.DEPLOY_PACKAGE_NAME }} s3://${{ env.EB_S3_BUCKET_NAME }}/
-
-      - name: Print nice message on success finish
-        run: echo "CI part finished successfuly"
   deploy:
     runs-on: ubuntu-latest
-    environment: production
-    needs: [build]
+
     steps:
-      - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v1
-        with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: ${{ env.AWS_REGION_NAME }}
+      - name: Check out code
+        uses: actions/checkout@v2
 
-      - name: Create new EBL app ver
+      - name: Install uv python manager
+        run: pip install uv
+
+      - name: Run tests with uv
         run: |
-          aws elasticbeanstalk create-application-version \
-          --application-name ${{ env.EB_APPLICATION_NAME }} \
-          --source-bundle S3Bucket="${{ env.EB_S3_BUCKET_NAME }}",S3Key="${{ env.DEPLOY_PACKAGE_NAME }}" \
-          --version-label "${{ env.VERSION_NAME }}"
-
-      - name: Deploy new app
-        run: |
-          aws elasticbeanstalk update-environment \
-            --environment-name ${{ env.EB_ENVIRONMENT_NAME }} \
-            --version-label "${{ env.VERSION_NAME }}" \
-            --option-settings \
-              Namespace=aws:elasticbeanstalk:application:environment,OptionName=SECRET_KEY,Value="${{ env.SECRET_KEY }}" \
-              Namespace=aws:elasticbeanstalk:application:environment,OptionName=DB_HOST,Value="${{ env.DB_HOST }}" \
-              Namespace=aws:elasticbeanstalk:application:environment,OptionName=DB_NAME,Value="${{ env.DB_NAME }}" \
-              Namespace=aws:elasticbeanstalk:application:environment,OptionName=DB_PASSWORD,Value="${{ env.DB_PASSWORD }}" \
-              Namespace=aws:elasticbeanstalk:application:environment,OptionName=DB_PORT,Value="${{ env.DB_PORT }}" \
-              Namespace=aws:elasticbeanstalk:application:environment,OptionName=DB_USER,Value="${{ env.DB_USER }}" \
-              Namespace=aws:elasticbeanstalk:application:environment,OptionName=USE_SQLITE,Value="${{ env.USE_SQLITE }}" \
-              Namespace=aws:elasticbeanstalk:application:environment,OptionName=DEBUG,Value="${{ env.DEBUG }}"
-
-      - name: Print nice message on success finish
-        run: echo "CD part finished successfuly"
+          uv sync
+          uv run manage.py test

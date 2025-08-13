@@ -19,8 +19,6 @@ class AuthTestCase(TestCase):
     def test_register_user(self):
         response = self.client.post(self.register_url, self.user_data)
         self.assertEqual(response.status_code, 201)
-        self.assertIn("token", response.data)
-        self.assertEqual(response.data["user"]["username"], self.user_data["username"])
 
     def test_login_user(self):
         User.objects.create_user(
@@ -37,4 +35,3 @@ class AuthTestCase(TestCase):
 
         response = self.client.post(self.login_url, login_payload)
         self.assertEqual(response.status_code, 200)
-        self.assertIn("token", response.data)

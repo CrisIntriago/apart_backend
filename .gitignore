@@ -13,13 +13,10 @@ __pycache__/
 *.sqlite3
 db.sqlite3
 media/
-staticfiles/
+# staticfiles/ TO VIEW ADMIN IN PRODUCTION
 local_settings.py
 
-# Django migrations (except __init__.py)
-**/migrations/*.py
-!**/migrations/__init__.py
-**/migrations/*.pyc
+
 # Environment variables
 .env
 .env.*

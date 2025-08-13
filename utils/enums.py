@@ -31,3 +31,16 @@ class ProficiencyLevel(models.TextChoices):
     ADVANCED = "C1", "Advanced (C1)"
     PROFICIENT = "C2", "Proficient (C2)"
     NATIVE = "N", "Native"
+
+
+class ExamType(models.TextChoices):
+    MIDTERM = "MIDTERM", "Parcial"
+    FINAL = "FINAL", "Final"
+
+
+class ExamAttemptStatus(models.TextChoices):
+    IN_PROGRESS = "in_progress", "In progress"
+    SUBMITTED = "submitted", "Submitted"
+    GRADED = "graded", "Graded"
+    CANCELLED = "cancelled", "Cancelled"
+    EXPIRED = "expired", "Expired"

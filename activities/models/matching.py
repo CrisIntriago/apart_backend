@@ -21,6 +21,7 @@ class MatchingPair(models.Model):
     )
     left = models.CharField(max_length=255)
     right = models.CharField(max_length=255)
+    is_vocabulary = models.BooleanField(default=False)
 
     def __str__(self):
-        return f"{self.left} ↔ {self.right}"
+        return f"{self.left} - {self.right}"

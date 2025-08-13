@@ -1,6 +1,6 @@
 from rest_framework import serializers
 
-from .models.base import Activity, UserAnswer
+from .models.base import Activity, ExamActivity, UserAnswer
 from .models.choice import Choice
 from .models.matching import MatchingPair
 from .strategies.payload.registry import PayloadStrategyRegistry
@@ -28,6 +28,14 @@ class ActivitySerializer(serializers.ModelSerializer):
         raise NotImplementedError(
             "No payload strategy found for activity type: {}".format(obj.type)
         )
+
+
+class ExamActivityItemSerializer(serializers.ModelSerializer):
+    activity = ActivitySerializer()
+
+    class Meta:
+        model = ExamActivity
+        fields = ("activity", "required", "position")
 
 
 class MatchingPairSerializer(serializers.ModelSerializer):
@@ -64,3 +72,12 @@ class UserAnswerSerializer(serializers.ModelSerializer):
     class Meta:
         model = UserAnswer
         fields = ["is_correct"]
+
+
+class LeaderboardEntrySerializer(serializers.Serializer):
+    user_id = serializers.IntegerField()
+    username = serializers.CharField()
+    full_name = serializers.CharField()
+    total_points = serializers.IntegerField()
+    activities_count = serializers.IntegerField()
+    position = serializers.IntegerField()
