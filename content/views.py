@@ -21,13 +21,14 @@ from people.serializers import StudentProfileSerializer
 from .models import Course, Exam, ExamAttempt, ExamAttemptStatus
 from .permissions import HasStartedExam
 from .serializers import (
+    CourseProgressSerializer,
     CourseSerializer,
     ExamSerializer,
     FinishAttemptRequestSerializer,
     FinishAttemptResponseSerializer,
     ModuleSerializer,
 )
-from .services import ExamGradingService
+from .services import CourseProgressService, ExamGradingService
 
 
 class CourseListView(APIView):
@@ -38,6 +39,38 @@ class CourseListView(APIView):
     def get(self, request):
         courses = Course.objects.all()
         serializer = CourseSerializer(courses, many=True, context={"request": request})
+        return Response(serializer.data)
+
+
+class CourseProgressView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    @extend_schema(
+        tags=["Courses"],
+        summary="Avance de un curso (usuario autenticado)",
+        description=(
+            "Devuelve el porcentaje de avance del curso para el usuario autenticado, "
+            "contando actividades con al menos una respuesta. Incluye desglose por módulo."  # noqa: E501
+        ),
+        parameters=[
+            OpenApiParameter(
+                name="course_id",
+                required=True,
+                type=int,
+                location=OpenApiParameter.PATH,
+            ),
+        ],
+        responses={200: CourseProgressSerializer},
+    )
+    def get(self, request, course_id: int):
+        course = get_object_or_404(Course, id=course_id)
+        result = CourseProgressService(course=course, user=request.user).compute()
+
+        serializer = CourseProgressSerializer({
+            "course": {"id": course.id, "name": course.name},
+            "overall": result.overall,
+            "modules": result.modules,
+        })
         return Response(serializer.data)
 
 

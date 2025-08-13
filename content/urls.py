@@ -5,6 +5,7 @@ from .views import (
     CourseListView,
     CourseModuleActivitiesView,
     CourseModulesView,
+    CourseProgressView,
     CourseStudentsView,
     ExamActivitiesView,
     FinishAttemptAndSubmitAnswersView,
@@ -13,6 +14,11 @@ from .views import (
 
 urlpatterns = [
     path("courses/", CourseListView.as_view(), name="course-list"),
+    path(
+        "courses/<int:course_id>/progress/",
+        CourseProgressView.as_view(),
+        name="course-progress",
+    ),
     path(
         "courses/<int:pk>/modules/", CourseModulesView.as_view(), name="course-modules"
     ),

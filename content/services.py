@@ -1,11 +1,22 @@
 # exams/services.py
-from django.db.models import OuterRef, Subquery, Sum, Value
+from dataclasses import dataclass
+from typing import Any, Dict, List
+
+from django.db.models import Count, OuterRef, Q, Subquery, Sum, Value
 from django.db.models.functions import Coalesce
 from django.utils import timezone
 
 from activities.models.base import Activity, UserAnswer
+from content.models import Course, Module
+from users.models import User
 
 from .models import ExamAttempt, ExamAttemptStatus
+
+
+@dataclass(frozen=True)
+class CourseProgressResult:
+    overall: Dict[str, Any]
+    modules: List[Dict[str, Any]]
 
 
 class ExamGradingService:
@@ -77,3 +88,71 @@ class ExamGradingService:
             ]
         )
         return attempt
+
+
+class CourseProgressService:
+    """
+    Calcula el avance de un curso para un usuario:
+    - overall: totales del curso (total, completadas, restantes, porcentaje)
+    - modules: lista de módulos con su propio avance
+    """
+
+    def __init__(self, course: Course, user: User):
+        self.course = course
+        self.user = user
+
+    def compute(self) -> CourseProgressResult:
+        total_activities = Activity.objects.filter(module__course=self.course).count()
+
+        completed_activities = (
+            UserAnswer.objects.filter(
+                user=self.user,
+                activity__module__course=self.course,
+            )
+            .values("activity_id")
+            .distinct()
+            .count()
+        )
+
+        percent = (
+            round((completed_activities * 100 / total_activities), 2)
+            if total_activities
+            else 0.0
+        )
+
+        modules_qs = (
+            Module.objects.filter(course=self.course)
+            .annotate(
+                total=Count("activities", distinct=True),
+                completed=Count(
+                    "activities",
+                    filter=Q(activities__answers__user=self.user),
+                    distinct=True,
+                ),
+            )
+            .values("id", "name", "total", "completed")
+        )
+
+        modules = []
+        for m in modules_qs:
+            m_percent = (
+                round((m["completed"] * 100 / m["total"]), 2) if m["total"] else 0.0
+            )
+            modules.append({
+                "id": m["id"],
+                "name": m["name"],
+                "total": m["total"],
+                "completed": m["completed"],
+                "remaining": max(m["total"] - m["completed"], 0),
+                "percent": m_percent,
+            })
+
+        return CourseProgressResult(
+            overall={
+                "total": total_activities,
+                "completed": completed_activities,
+                "remaining": max(total_activities - completed_activities, 0),
+                "percent": percent,
+            },
+            modules=modules,
+        )
