@@ -3,8 +3,8 @@ import uuid
 from django.contrib import messages
 from django.contrib.auth import login
 from django.shortcuts import redirect, render
-from django.urls import reverse
 from django.views import View
+from django.views.generic import TemplateView
 from drf_spectacular.utils import (
     OpenApiExample,
     OpenApiResponse,
@@ -220,7 +220,11 @@ class PasswordResetFormView(View):
             return render(request, self.template_name, {"token": token})
 
         messages.success(request, "Your password has been reset successfully.")
-        return redirect(reverse("password_reset_success"))
+        return redirect("password_reset_success")
 
     def _parse(self, token: str) -> uuid.UUID:
         return uuid.UUID(str(token))
+
+
+class PasswordResetSuccessView(TemplateView):
+    template_name = "password_reset_success.html"

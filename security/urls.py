@@ -5,6 +5,7 @@ from .views import (
     LoginView,
     PasswordResetFormView,
     PasswordResetRequestView,
+    PasswordResetSuccessView,
     RegisterView,
     ValidateEmailView,
 )
@@ -23,5 +24,10 @@ urlpatterns = [
         "password-reset/<uuid:token>/",
         PasswordResetFormView.as_view(),
         name="password_reset_form",
+    ),
+    path(
+        "password-reset/success/",
+        PasswordResetSuccessView.as_view(),
+        name="password_reset_success",
     ),
 ]
