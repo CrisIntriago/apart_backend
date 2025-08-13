@@ -31,3 +31,8 @@ class ProficiencyLevel(models.TextChoices):
     ADVANCED = "C1", "Advanced (C1)"
     PROFICIENT = "C2", "Proficient (C2)"
     NATIVE = "N", "Native"
+
+
+class ExamType(models.TextChoices):
+    MIDTERM = "MIDTERM", "Parcial"
+    FINAL = "FINAL", "Final"

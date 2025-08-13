@@ -1,6 +1,6 @@
 from django.db import models
 
-from content.models import Module
+from content.models import Exam, Module
 from users.models import User
 from utils.enums import ActivityType, DifficultyLevel
 
@@ -39,6 +39,21 @@ class Activity(models.Model):
 
     def __str__(self):
         return f"{self.title} ({self.get_type_display()}) - {self.get_difficulty_display()}"  # noqa: E501
+
+
+class ExamActivity(models.Model):
+    class Meta:
+        db_table = "exam_activity"
+        unique_together = ("exam", "activity")
+
+    exam = models.ForeignKey(Exam, on_delete=models.CASCADE, related_name="exam_items")
+    activity = models.ForeignKey(
+        "activities.Activity", on_delete=models.CASCADE, related_name="exam_items"
+    )
+    required = models.BooleanField(default=True)
+
+    def __str__(self):
+        return f"Examen: {self.exam.title} - Actividad: {self.activity.title}"
 
 
 class UserAnswer(models.Model):

@@ -2,7 +2,7 @@ from django.db import models
 
 from languages.models import Language
 from people.models import Student
-from utils.enums import DifficultyLevel
+from utils.enums import DifficultyLevel, ExamType
 
 
 class Course(models.Model):
@@ -67,3 +67,35 @@ class Vocabulary(models.Model):
 
     def __str__(self):
         return f"{self.word} - {self.student}"
+
+
+class Exam(models.Model):
+    class Meta:
+        db_table = "exam"
+        verbose_name = "Exam"
+        verbose_name_plural = "Exams"
+        constraints = [
+            models.UniqueConstraint(
+                fields=["course", "type"], name="uniq_exam_per_course_and_type"
+            )
+        ]
+
+    course = models.ForeignKey(Course, on_delete=models.CASCADE, related_name="exams")
+    type = models.CharField(max_length=20, choices=ExamType.choices)
+    title = models.CharField(max_length=200, blank=True)
+    description = models.TextField(blank=True)
+    is_published = models.BooleanField(default=False)
+    time_limit_minutes = models.PositiveIntegerField(null=True, blank=True)
+    attempts_allowed = models.PositiveIntegerField(default=1)
+
+    activities = models.ManyToManyField(
+        "activities.Activity",
+        through="activities.ExamActivity",
+        related_name="in_exams",
+        blank=True,
+    )
+
+    def __str__(self):
+        return f"{self.course.name} - {self.get_type_display()}" + (
+            f" ({self.title})" if self.title else ""
+        )
