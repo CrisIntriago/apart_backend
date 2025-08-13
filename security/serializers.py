@@ -20,8 +20,14 @@ class RegisterSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = [
-            "username", "email", "password", "first_name", "last_name",
-            "country", "date_of_birth", "languages",
+            "username",
+            "email",
+            "password",
+            "first_name",
+            "last_name",
+            "country",
+            "date_of_birth",
+            "languages",
         ]
 
 
@@ -30,7 +36,7 @@ class EmailValidationSerializer(serializers.Serializer):
 
 
 class LoginSerializer(serializers.Serializer):
-    email = serializers.EmailField() 
+    email = serializers.EmailField()
     password = serializers.CharField()
 
     def validate(self, data):
@@ -38,3 +44,7 @@ class LoginSerializer(serializers.Serializer):
         if user and user.is_active:
             return {"user": user}
         raise serializers.ValidationError("Invalid credentials")
+
+
+class PasswordResetRequestSerializer(serializers.Serializer):
+    email = serializers.EmailField()
