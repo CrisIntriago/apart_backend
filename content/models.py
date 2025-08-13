@@ -63,6 +63,11 @@ class Vocabulary(models.Model):
         verbose_name = "Vocabulary"
         verbose_name_plural = "Vocabularies"
         db_table = "vocabulary"
+        constraints = [
+            models.UniqueConstraint(
+                fields=["student", "word"], name="uq_vocab_student_word"
+            )
+        ]
 
     student = models.ForeignKey(
         Student, on_delete=models.CASCADE, related_name="vocabularies"
