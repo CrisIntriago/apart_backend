@@ -45,12 +45,14 @@ class ExamActivity(models.Model):
     class Meta:
         db_table = "exam_activity"
         unique_together = ("exam", "activity")
+        ordering = ("position", "id")
 
     exam = models.ForeignKey(Exam, on_delete=models.CASCADE, related_name="exam_items")
     activity = models.ForeignKey(
         "activities.Activity", on_delete=models.CASCADE, related_name="exam_items"
     )
     required = models.BooleanField(default=True)
+    position = models.PositiveIntegerField(default=0)
 
     def __str__(self):
         return f"Examen: {self.exam.title} - Actividad: {self.activity.title}"
@@ -60,8 +62,8 @@ class UserAnswer(models.Model):
     class Meta:
         db_table = "user_answer"
         indexes = [
-            models.Index(fields=["answered_at"]),
-            models.Index(fields=["user", "activity"]),
+            models.Index(fields=["user", "activity", "is_correct"]),
+            models.Index(fields=["exam_attempt", "activity"]),
         ]
 
     user = models.ForeignKey(
@@ -73,6 +75,14 @@ class UserAnswer(models.Model):
         related_name="answers",
         null=True,
         blank=True,
+    )
+    exam_attempt = models.ForeignKey(
+        "content.ExamAttempt",
+        on_delete=models.CASCADE,
+        related_name="answers",
+        null=True,
+        blank=True,
+        help_text="Si la respuesta pertenece a un examen, referencia el intento.",
     )
     response_data = models.JSONField()
     is_correct = models.BooleanField()
