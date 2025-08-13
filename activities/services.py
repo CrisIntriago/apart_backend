@@ -8,6 +8,7 @@ from django.shortcuts import get_object_or_404
 from django.utils import timezone
 
 from activities.models.base import Activity, UserAnswer
+from activities.models.matching import MatchingActivity
 from activities.strategies.validation.registry import ValidationStrategyRegistry
 from content.models import Vocabulary
 from people.models import Person, Student
@@ -59,11 +60,20 @@ class AnswerSubmissionService:
         )
 
     def _create_vocabulary_if_applicable(self, activity: Activity):
+        difficulty = activity.difficulty
         if activity.type != ActivityType.MATCH:
             return
-
         try:
-            student = Student.objects.only("id").get(user=self.user)
+            activity = MatchingActivity.objects.get(pk=activity.id)
+        except MatchingActivity.DoesNotExist:
+            return
+        try:
+            student_id = (
+                Student.objects.select_related("person")
+                .only("id", "person__id")
+                .values_list("id", flat=True)
+                .get(person__user_id=self.user.id)
+            )
         except Student.DoesNotExist:
             return
 
@@ -73,10 +83,10 @@ class AnswerSubmissionService:
 
         vocab_to_create = [
             Vocabulary(
-                student=student,
+                student_id=student_id,
                 word=row["left"],
                 meaning=row["right"],
-                difficulty=activity.difficulty,
+                difficulty=difficulty,
             )
             for row in pairs_qs
         ]
