@@ -7,7 +7,7 @@ from activities.strategies.validation.registry import ValidationStrategyRegistry
 from content.models import ExamAttempt
 from languages.serializers import LanguageSerializer
 
-from .models import Course, Exam, Module
+from .models import Course, Exam, Module, Vocabulary
 
 
 class ModuleSerializer(serializers.ModelSerializer):
@@ -120,3 +120,9 @@ class StartAttemptResponseSerializer(serializers.Serializer):
     time_limit_minutes = serializers.IntegerField(allow_null=True)
     status = serializers.CharField()
     started_at = serializers.DateTimeField()
+
+
+class VocabularySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Vocabulary
+        fields = ("id", "word", "meaning", "difficulty")
