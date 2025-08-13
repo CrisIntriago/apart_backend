@@ -8,8 +8,11 @@ from django.shortcuts import get_object_or_404
 from django.utils import timezone
 
 from activities.models.base import Activity, UserAnswer
+from activities.models.matching import MatchingActivity
 from activities.strategies.validation.registry import ValidationStrategyRegistry
-from people.models import Person
+from content.models import Vocabulary
+from people.models import Person, Student
+from utils.enums import ActivityType
 
 
 class AnswerSubmissionService:
@@ -23,7 +26,15 @@ class AnswerSubmissionService:
         activity = self._get_activity()
         serializer = self._get_validated_serializer(activity)
         is_correct = self._validate_response(activity, serializer.validated_data)
-        return self._save_user_answer(activity, serializer.validated_data, is_correct)
+        user_answer = self._save_user_answer(
+            activity, serializer.validated_data, is_correct
+        )
+        transaction.on_commit(
+            lambda: self._create_vocabulary_if_applicable(
+                activity, serializer.validated_data
+            )
+        )
+        return user_answer
 
     def _get_activity(self):
         return get_object_or_404(Activity, pk=self.activity_id)
@@ -51,6 +62,37 @@ class AnswerSubmissionService:
             is_correct=is_correct,
             exam_attempt=self.exam_attempt,
         )
+
+    def _create_vocabulary_if_applicable(self, activity: Activity, data: dict):
+        if activity.type != ActivityType.MATCH:
+            return
+        if not isinstance(activity, MatchingActivity):
+            activity = MatchingActivity.objects.get(pk=activity.pk)
+
+        try:
+            student = Student.objects.get(user=self.user)
+        except Student.DoesNotExist:
+            return
+
+        vocab_pairs = activity.pairs.filter(is_vocabulary=True).only(
+            "id", "left", "right"
+        )
+        by_left_id = {p.id: p for p in vocab_pairs}
+
+        pairs = data.get("pairs", [])
+        to_create = []
+        for item in pairs:
+            left_id = item.get("left_id")
+            mp = by_left_id.get(left_id)
+            if not mp:
+                continue
+            to_create.append(
+                Vocabulary(student=student, word=mp.left, meaning=mp.right)
+            )
+
+        if not to_create:
+            return
+        Vocabulary.objects.bulk_create(to_create, ignore_conflicts=True)
 
     @classmethod
     @transaction.atomic
