@@ -103,3 +103,11 @@ class FinishAttemptResponseSerializer(serializers.ModelSerializer):
             "total_questions",
             "finished_at",
         )
+
+
+class StartAttemptResponseSerializer(serializers.Serializer):
+    attempt_id = serializers.IntegerField()
+    attempt_number = serializers.IntegerField()
+    time_limit_minutes = serializers.IntegerField(allow_null=True)
+    status = serializers.CharField()
+    started_at = serializers.DateTimeField()
