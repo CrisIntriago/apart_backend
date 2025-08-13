@@ -4,6 +4,8 @@ from django.utils import timezone
 from drf_spectacular.utils import (
     OpenApiExample,
     OpenApiParameter,
+    OpenApiRequest,
+    OpenApiResponse,
     OpenApiTypes,
     extend_schema,
 )
@@ -82,6 +84,7 @@ class CourseStudentsView(APIView):
 
 class CourseExamsView(APIView):
     @extend_schema(
+        tags=["Exams"],
         summary="Obtener los exámenes publicados de un curso",
         responses={200: ExamSerializer(many=True)},
         examples=[
@@ -113,6 +116,7 @@ class StartAttemptView(APIView):
     permission_classes = [permissions.IsAuthenticated]
 
     @extend_schema(
+        tags=["Exams"],
         summary="Iniciar intento de examen",
         description="Crea un nuevo intento para un examen si el usuario aún tiene intentos disponibles.",  # noqa: E501
         parameters=[
@@ -186,6 +190,7 @@ class ExamActivitiesView(APIView):
         return get_object_or_404(Exam, pk=exam_id, is_published=True)
 
     @extend_schema(
+        tags=["Exams"],
         summary="Obtener actividades de un examen",
         description="Devuelve la lista de actividades asociadas a un examen publicado. Usa `shuffle` para barajar el orden.",  # noqa: E501
         parameters=[
@@ -245,6 +250,54 @@ class ExamActivitiesView(APIView):
 class FinishAttemptAndSubmitAnswersView(APIView):
     permission_classes = [permissions.IsAuthenticated]
 
+    @extend_schema(
+        tags=["Exams"],
+        summary="Finalizar intento y enviar respuestas",
+        description="Recibe las respuestas del usuario para un examen y finaliza el intento.",
+        parameters=[
+            OpenApiParameter(
+                name="attempt_id",
+                type=OpenApiTypes.INT,
+                location=OpenApiParameter.PATH,
+                description="ID del intento de examen",
+            )
+        ],
+        request=OpenApiRequest(
+            request=FinishAttemptRequestSerializer,
+            examples=[
+                OpenApiExample(
+                    "Solicitud simple",
+                    value={
+                        "answers": [
+                            {"activity_id": 1, "input_data": {"selected_ids": [2]}}
+                        ]
+                    },
+                )
+            ],
+        ),
+        responses={
+            200: OpenApiResponse(
+                response=FinishAttemptResponseSerializer,
+                examples=[
+                    OpenApiExample(
+                        "Respuesta simple",
+                        value={
+                            "attempt_id": 10,
+                            "exam_id": 5,
+                            "status": "PASSED",
+                            "score_points": 8,
+                            "max_points": 10,
+                            "percentage": 80.0,
+                            "passed": True,
+                            "correct_count": 4,
+                            "total_questions": 5,
+                            "finished_at": "2025-08-12T15:30:00Z",
+                        },
+                    )
+                ],
+            )
+        },
+    )
     def post(self, request, attempt_id: int):
         attempt = ExamAttempt.objects.select_related("exam").get(pk=attempt_id)
         if attempt.user_id != request.user.id:
