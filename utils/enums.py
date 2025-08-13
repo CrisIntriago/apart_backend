@@ -36,3 +36,11 @@ class ProficiencyLevel(models.TextChoices):
 class ExamType(models.TextChoices):
     MIDTERM = "MIDTERM", "Parcial"
     FINAL = "FINAL", "Final"
+
+
+class ExamAttemptStatus(models.TextChoices):
+    IN_PROGRESS = "in_progress", "In progress"
+    SUBMITTED = "submitted", "Submitted"
+    GRADED = "graded", "Graded"
+    CANCELLED = "cancelled", "Cancelled"
+    EXPIRED = "expired", "Expired"
