@@ -2,6 +2,7 @@ from django import forms
 from django.contrib import admin, messages
 from django.http import HttpResponseRedirect
 from django.urls import reverse
+from django.utils.html import format_html
 from unfold.admin import ModelAdmin, TabularInline
 
 from activities.models.base import ExamActivity
@@ -9,6 +10,7 @@ from content.models import Exam
 from content.models import Module as ContentModule
 from utils.enums import ActivityType
 
+from .forms import FillInTheBlankActivityForm
 from .models.base import Activity
 from .models.choice import Choice, ChoiceActivity
 from .models.fill_in_the_blank import FillInTheBlankActivity
@@ -121,20 +123,37 @@ class ChoiceActivityAdmin(AttachToExamOnCreateMixin, ModulePresetMixin, ModelAdm
 
 
 @admin.register(FillInTheBlankActivity)
-class FillInTheBlankActivityAdmin(
-    AttachToExamOnCreateMixin, ModulePresetMixin, ModelAdmin
-):
+class FillInTheBlankActivityAdmin(ModelAdmin):
+    form = FillInTheBlankActivityForm
     list_display = ("title", "short_text", "difficulty", "created_at")
     search_fields = ("title", "text")
     ordering = ("-created_at",)
+
+    fieldsets = (
+        (None, {"fields": ("title", "instructions", "difficulty", "points", "module")}),
+        ("Contenido", {"fields": ("authoring_text",)}),
+        ("Vista previa", {"fields": ("preview_text",)}),
+    )
+    readonly_fields = ("preview_text",)
 
     def get_changeform_initial_data(self, request):
         return {"type": ActivityType.FILL}
 
     def short_text(self, obj):
-        return (obj.text[:75] + "...") if len(obj.text) > 75 else obj.text
+        return (
+            (obj.text[:75] + "...")
+            if obj.text and len(obj.text) > 75
+            else (obj.text or "-")
+        )
 
     short_text.short_description = "Texto"
+
+    def preview_text(self, obj):
+        if not obj or not getattr(obj, "text", None):
+            return "-"
+        return format_html(obj.text.replace("{{blank}}", "<strong>____</strong>"))
+
+    preview_text.short_description = "Previsualización"
 
 
 class MatchingPairInline(ModulePresetMixin, TabularInline):
