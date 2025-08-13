@@ -193,7 +193,7 @@ class MatchingPairInline(ModulePresetMixin, TabularInline):
     model = MatchingPair
     extra = 2
     min_num = 1
-    fields = ("left", "right")
+    fields = ("left", "right", "is_vocabulary")
     show_change_link = True
 
 
