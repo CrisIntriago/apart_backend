@@ -1,6 +1,7 @@
 from datetime import timedelta
 from typing import Any, Dict, Iterable, List, Optional
 
+from django.db import transaction
 from django.db.models import Count, F, QuerySet, Sum, Window
 from django.db.models.functions import Rank
 from django.shortcuts import get_object_or_404
@@ -12,10 +13,11 @@ from people.models import Person
 
 
 class AnswerSubmissionService:
-    def __init__(self, user, activity_id, input_data):
+    def __init__(self, user, activity_id, input_data, exam_attempt=None):
         self.user = user
         self.activity_id = activity_id
         self.input_data = input_data
+        self.exam_attempt = exam_attempt
 
     def execute(self):
         activity = self._get_activity()
@@ -47,7 +49,22 @@ class AnswerSubmissionService:
             activity=activity,
             response_data=response_data,
             is_correct=is_correct,
+            exam_attempt=self.exam_attempt,
         )
+
+    @classmethod
+    @transaction.atomic
+    def submit_many(cls, user, answers_payload, exam_attempt=None):
+        created = []
+        for item in answers_payload:
+            svc = cls(
+                user=user,
+                activity_id=item["activity_id"],
+                input_data=item["input_data"],
+                exam_attempt=exam_attempt,
+            )
+            created.append(svc.execute())
+        return created
 
 
 class LeaderboardService:
