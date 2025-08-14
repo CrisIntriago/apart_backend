@@ -1,8 +1,9 @@
 from django.db import models
+from django.utils import timezone
 
 from languages.models import Language
 from users.models import User
-from utils.enums import ProficiencyLevel
+from utils.enums import EnrollmentStatus, ProficiencyLevel
 
 
 class Person(models.Model):
@@ -47,11 +48,10 @@ class Student(models.Model):
         null=True,
         blank=True,
     )
-
     course = models.ForeignKey(
         "content.Course",
         on_delete=models.SET_NULL,
-        related_name="students",
+        related_name="students_legacy",
         null=True,
         blank=True,
     )
@@ -62,6 +62,52 @@ class Student(models.Model):
 
     def __str__(self):
         return f"{self.person.first_name} {self.person.last_name} (Student)"
+
+
+class Enrollment(models.Model):
+    class Meta:
+        db_table = "enrollments"
+        verbose_name = "Enrollment"
+        verbose_name_plural = "Enrollments"
+        constraints = [
+            models.UniqueConstraint(
+                fields=["student", "course"], name="uq_enrollment_student_course"
+            )
+        ]
+        indexes = [
+            models.Index(fields=["student", "course", "status"]),
+        ]
+
+    student = models.ForeignKey(
+        Student, on_delete=models.CASCADE, related_name="enrollments"
+    )
+    course = models.ForeignKey(
+        "content.Course", on_delete=models.CASCADE, related_name="enrollments"
+    )
+
+    status = models.CharField(
+        max_length=12, choices=EnrollmentStatus.choices, default=EnrollmentStatus.ACTIVE
+    )
+    enrolled_at = models.DateTimeField(default=timezone.now)
+    start_at = models.DateTimeField(null=True, blank=True)
+    end_at = models.DateTimeField(null=True, blank=True)
+    role = models.CharField(max_length=20, blank=True, default="student")
+    notes = models.TextField(blank=True, default="")
+
+    progress_percent = models.DecimalField(
+        max_digits=5, decimal_places=2, default=0, blank=True
+    )
+    last_activity_at = models.DateTimeField(null=True, blank=True)
+
+    def is_active_now(self):
+        now = timezone.now()
+        if self.status != EnrollmentStatus.ACTIVE:
+            return False
+        if self.start_at and now < self.start_at:
+            return False
+        if self.end_at and now > self.end_at:
+            return False
+        return True
 
 
 class StudentLanguageProficiency(models.Model):

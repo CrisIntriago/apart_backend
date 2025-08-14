@@ -107,6 +107,7 @@ class ModuleInline(TabularInline):
 
 @admin.register(Course)
 class CourseAdmin(ModelAdmin):
+    search_fields = ("name", "description", "id")
     list_display = ("name",)
     inlines = [ModuleInline]
 

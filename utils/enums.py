@@ -44,3 +44,10 @@ class ExamAttemptStatus(models.TextChoices):
     GRADED = "graded", "Graded"
     CANCELLED = "cancelled", "Cancelled"
     EXPIRED = "expired", "Expired"
+
+
+class EnrollmentStatus(models.TextChoices):
+    ACTIVE = "ACTIVE", "Active"
+    PAUSED = "PAUSED", "Paused"
+    CANCELED = "CANCELED", "Canceled"
+    COMPLETED = "COMPLETED", "Completed"

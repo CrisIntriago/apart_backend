@@ -1,9 +1,11 @@
 import uuid
-import requests
 
+import requests
 from django.contrib import messages
 from django.contrib.auth import get_user_model, login
+from django.db.models import Q
 from django.shortcuts import redirect, render
+from django.utils import timezone
 from django.views import View
 from django.views.generic import TemplateView
 from drf_spectacular.utils import (
@@ -16,10 +18,12 @@ from rest_framework import status
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from django.contrib.auth import authenticate
 
 from content.serializers import CourseSerializer
+from people.models import Enrollment
 from users.models import User
+from utils.enums import EnrollmentStatus
+
 from .exceptions import (
     PasswordValidationError,
     TokenExpired,
@@ -27,14 +31,13 @@ from .exceptions import (
 )
 from .serializers import (
     EmailValidationSerializer,
+    LoginGoogleSerializer,
     LoginSerializer,
     PasswordResetRequestSerializer,
-    RegisterSerializer,
     RegisterGoogleSerializer,
-    LoginGoogleSerializer,
+    RegisterSerializer,
 )
 from .services import PasswordResetService, login_user, register_token, register_user
-import logging
 
 
 class RegisterView(APIView):
@@ -47,7 +50,7 @@ class RegisterView(APIView):
         },
         responses={201: None},
         summary="Registro de usuario",
-        description="Registra un nuevo usuario y devuelve su token (puede autenticarse usando google o email)",
+        description="Registra un nuevo usuario y devuelve su token (puede autenticarse usando google o email)",  # noqa: E501
     )
     def post(self, request):
         google_token = request.data.get("google_token")
@@ -58,7 +61,10 @@ class RegisterView(APIView):
                 google_data = response.json()
 
                 if response.status_code != 200 or "email" not in google_data:
-                    return Response({"detail": ("Token de Google no válido.")}, status=status.HTTP_400_BAD_REQUEST)
+                    return Response(
+                        {"detail": ("Token de Google no válido.")},
+                        status=status.HTTP_400_BAD_REQUEST,
+                    )
                 return Response(
                     {
                         "user": {
@@ -72,7 +78,10 @@ class RegisterView(APIView):
                     status=status.HTTP_201_CREATED,
                 )
             except requests.exceptions.RequestException:
-                return Response({"detail": "Error al verificar el token de Google."}, status=status.HTTP_400_BAD_REQUEST)
+                return Response(
+                    {"detail": "Error al verificar el token de Google."},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
 
         serializer = RegisterSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
@@ -100,7 +109,7 @@ class LoginView(APIView):
     permission_classes = [AllowAny]
 
     @extend_schema(
-         request={
+        request={
             "application/json": LoginSerializer,
             "application/json;google": LoginGoogleSerializer,
         },
@@ -118,7 +127,10 @@ class LoginView(APIView):
                 google_data = response.json()
 
                 if response.status_code != 200 or "email" not in google_data:
-                    return Response({"detail": ("Token de Google no válido.")}, status=status.HTTP_400_BAD_REQUEST)
+                    return Response(
+                        {"detail": ("Token de Google no válido.")},
+                        status=status.HTTP_400_BAD_REQUEST,
+                    )
 
                 email = google_data["email"]
                 user_model = get_user_model()
@@ -133,19 +145,36 @@ class LoginView(APIView):
                                 "password": User.make_random_password(),
                             }
                         },
-                        status=status.HTTP_404_NOT_FOUND
+                        status=status.HTTP_404_NOT_FOUND,
                     )
 
-                login(request, user,
-                      backend='django.contrib.auth.backends.ModelBackend')
+                login(
+                    request, user, backend="django.contrib.auth.backends.ModelBackend"
+                )
                 user = user_model.objects.get(email=email)
                 token = login_user(user)
                 courses_data = []
                 person = getattr(user, "person", None)
                 student = getattr(person, "student", None) if person else None
-                if student and getattr(student, "course", None):
-                    courses_data = CourseSerializer(
-                        [student.course], many=True).data
+
+                if student:
+                    now = timezone.now()
+                    enrollments_qs = (
+                        Enrollment.objects.filter(
+                            student=student,
+                            status=EnrollmentStatus.ACTIVE,
+                        )
+                        .filter(Q(start_at__isnull=True) | Q(start_at__lte=now))
+                        .filter(Q(end_at__isnull=True) | Q(end_at__gte=now))
+                        .select_related("course")
+                    )
+
+                    courses = [e.course for e in enrollments_qs if e.course is not None]
+
+                    if not courses and getattr(student, "course", None):
+                        courses = [student.course]
+
+                    courses_data = CourseSerializer(courses, many=True).data
                 return Response(
                     {
                         "user": {
@@ -165,7 +194,10 @@ class LoginView(APIView):
                     status=status.HTTP_200_OK,
                 )
             except requests.exceptions.RequestException:
-                return Response({"detail": ("Error al verificar el token de Google.")}, status=status.HTTP_400_BAD_REQUEST)
+                return Response(
+                    {"detail": ("Error al verificar el token de Google.")},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
 
         # Login tradicional
         serializer = LoginSerializer(data=request.data)
@@ -176,8 +208,25 @@ class LoginView(APIView):
         courses_data = []
         person = getattr(user, "person", None)
         student = getattr(person, "student", None) if person else None
-        if student and getattr(student, "course", None):
-            courses_data = CourseSerializer([student.course], many=True).data
+
+        if student:
+            now = timezone.now()
+            enrollments_qs = (
+                Enrollment.objects.filter(
+                    student=student,
+                    status=EnrollmentStatus.ACTIVE,
+                )
+                .filter(Q(start_at__isnull=True) | Q(start_at__lte=now))
+                .filter(Q(end_at__isnull=True) | Q(end_at__gte=now))
+                .select_related("course")
+            )
+
+            courses = [e.course for e in enrollments_qs if e.course is not None]
+
+            if not courses and getattr(student, "course", None):
+                courses = [student.course]
+
+            courses_data = CourseSerializer(courses, many=True).data
 
         return Response(
             {
@@ -291,25 +340,21 @@ class PasswordResetFormView(View):
         check = svc.check_token(self._parse(token))
         if not check.is_valid:
             return render(
-                request, self.template_name, {
-                    "invalid": True, "reason": check.reason}
+                request, self.template_name, {"invalid": True, "reason": check.reason}
             )
         return render(request, self.template_name, {"token": token})
 
     def post(self, request, token):
         svc = PasswordResetService()
         try:
-            svc.reset_with_token(self._parse(
-                token), request.POST.get("password", ""))
+            svc.reset_with_token(self._parse(token), request.POST.get("password", ""))
         except TokenInvalid:
             return render(
-                request, self.template_name, {
-                    "invalid": True, "reason": "not_found"}
+                request, self.template_name, {"invalid": True, "reason": "not_found"}
             )
         except TokenExpired:
             return render(
-                request, self.template_name, {
-                    "invalid": True, "reason": "expired"}
+                request, self.template_name, {"invalid": True, "reason": "expired"}
             )
         except PasswordValidationError as e:
             messages.error(request, "; ".join(e.messages))
