@@ -122,6 +122,21 @@ class StartAttemptResponseSerializer(serializers.Serializer):
     started_at = serializers.DateTimeField()
 
 
+class ExamAttemptStartSerializer(serializers.ModelSerializer):
+    attempt_id = serializers.IntegerField(source="id", read_only=True)
+
+    class Meta:
+        model = ExamAttempt
+        fields = (
+            "attempt_id",
+            "attempt_number",
+            "time_limit_minutes",
+            "status",
+            "started_at",
+        )
+        read_only_fields = fields
+
+
 class VocabularySerializer(serializers.ModelSerializer):
     class Meta:
         model = Vocabulary
