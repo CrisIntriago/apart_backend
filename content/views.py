@@ -1,4 +1,3 @@
-from django.db.models import Max
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
 from drf_spectacular.utils import (
@@ -18,17 +17,19 @@ from activities.serializers import ActivitySerializer, ExamActivityItemSerialize
 from activities.services import AnswerSubmissionService
 from people.serializers import StudentProfileSerializer
 
+from .exceptions import NoAttemptsRemainingError
 from .models import Course, Exam, ExamAttempt, ExamAttemptStatus
 from .permissions import HasStartedExam
 from .serializers import (
     CourseProgressSerializer,
     CourseSerializer,
+    ExamAttemptStartSerializer,
     ExamSerializer,
     FinishAttemptRequestSerializer,
     FinishAttemptResponseSerializer,
     ModuleSerializer,
 )
-from .services import CourseProgressService, ExamGradingService
+from .services import CourseProgressService, ExamAttemptService, ExamGradingService
 
 
 class CourseListView(APIView):
@@ -174,45 +175,17 @@ class StartAttemptView(APIView):
         },
     )
     def post(self, request, exam_id: int):
-        exam = Exam.objects.get(pk=exam_id)
-        user = request.user
+        try:
+            result = ExamAttemptService.start_attempt(
+                exam_id=exam_id, user=request.user
+            )
+        except NoAttemptsRemainingError as e:
+            return Response({"detail": str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
-        used = ExamAttempt.objects.filter(
-            exam=exam,
-            user=user,
-            status__in=[
-                ExamAttemptStatus.GRADED,
-                ExamAttemptStatus.EXPIRED,
-                ExamAttemptStatus.CANCELLED,
-            ],
-        ).count()
-
-        if exam.attempts_allowed and used >= exam.attempts_allowed:
-            return Response({"detail": "No attempts remaining."}, status=400)
-
-        next_number = (
-            ExamAttempt.objects.filter(exam=exam, user=user).aggregate(
-                m=Max("attempt_number")
-            )["m"]
-            or 0
-        ) + 1
-
-        attempt = ExamAttempt.objects.create(
-            exam=exam,
-            user=user,
-            attempt_number=next_number,
-            time_limit_minutes=exam.time_limit_minutes,
-            status=ExamAttemptStatus.IN_PROGRESS,
-        )
+        serializer = ExamAttemptStartSerializer(instance=result.attempt)
         return Response(
-            {
-                "attempt_id": attempt.id,
-                "attempt_number": attempt.attempt_number,
-                "time_limit_minutes": attempt.time_limit_minutes,
-                "status": attempt.status,
-                "started_at": attempt.started_at,
-            },
-            status=201,
+            serializer.data,
+            status=status.HTTP_201_CREATED if result.created else status.HTTP_200_OK,
         )
 
 
