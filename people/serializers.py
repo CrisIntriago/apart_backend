@@ -35,6 +35,12 @@ class ProfileSerializer(serializers.ModelSerializer):
 
 
 class StudentProfileSerializer(ProfileSerializer):
+    description = serializers.CharField(
+        source="student.description",
+        allow_blank=True,
+        allow_null=True,
+        read_only=True,
+    )
     languages = StudentLanguageProficiencySerializer(
         many=True,
         read_only=True,
@@ -48,3 +54,18 @@ class StudentProfileSerializer(ProfileSerializer):
 
 class UpdateAccessSerializer(serializers.Serializer):
     hasAccess = serializers.BooleanField()
+    fields = ProfileSerializer.Meta.fields + (
+            "description",
+            "languages",
+            "course",
+        )
+
+
+class StudentDescriptionUpdateSerializer(serializers.Serializer):
+    description = serializers.CharField(
+        allow_blank=True,
+        allow_null=True,
+        required=True,
+        max_length=2000,
+        help_text="Descripción breve del estudiante.",
+    )

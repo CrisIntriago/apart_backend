@@ -122,7 +122,44 @@ class StartAttemptResponseSerializer(serializers.Serializer):
     started_at = serializers.DateTimeField()
 
 
+class ExamAttemptStartSerializer(serializers.ModelSerializer):
+    attempt_id = serializers.IntegerField(source="id", read_only=True)
+
+    class Meta:
+        model = ExamAttempt
+        fields = (
+            "attempt_id",
+            "attempt_number",
+            "time_limit_minutes",
+            "status",
+            "started_at",
+        )
+        read_only_fields = fields
+
+
 class VocabularySerializer(serializers.ModelSerializer):
     class Meta:
         model = Vocabulary
         fields = ("id", "word", "meaning", "difficulty")
+
+
+class ModuleProgressSerializer(serializers.Serializer):
+    id = serializers.IntegerField()
+    name = serializers.CharField()
+    total = serializers.IntegerField()
+    completed = serializers.IntegerField()
+    remaining = serializers.IntegerField()
+    percent = serializers.FloatField()
+
+
+class OverallProgressSerializer(serializers.Serializer):
+    total = serializers.IntegerField()
+    completed = serializers.IntegerField()
+    remaining = serializers.IntegerField()
+    percent = serializers.FloatField()
+
+
+class CourseProgressSerializer(serializers.Serializer):
+    course = serializers.DictField()
+    overall = OverallProgressSerializer()
+    modules = ModuleProgressSerializer(many=True)

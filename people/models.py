@@ -56,6 +56,10 @@ class Student(models.Model):
         blank=True,
     )
 
+    description = models.TextField(
+        null=True, blank=True, help_text="Descripción breve sobre el estudiante."
+    )
+
     def __str__(self):
         return f"{self.person.first_name} {self.person.last_name} (Student)"
 
