@@ -1,5 +1,9 @@
-from django.contrib import admin
+from django.contrib import admin, messages
+from django.db import IntegrityError, transaction
+from django.forms.utils import ErrorList
 from unfold.admin import ModelAdmin, TabularInline
+
+from utils.enums import EnrollmentStatus
 
 from .forms import PersonAdminForm, StudentAdminForm
 from .models import (
@@ -50,14 +54,10 @@ class EnrollmentInline(TabularInline):
 @admin.register(Student)
 class StudentAdmin(ModelAdmin):
     form = StudentAdminForm
-    list_display = (
-        "person",
-        "enrollments_count",
-        "active_course",
-    )
+    list_display = ("person", "enrollments_count", "active_course")
     search_fields = ("person__first_name", "person__last_name", "person__user__email")
     raw_id_fields = ("person",)
-    inlines = [StudentLanguageProficiencyInline, EnrollmentInline]
+    inlines = [EnrollmentInline]
     list_select_related = ("person",)
 
     def enrollments_count(self, obj):
@@ -65,24 +65,52 @@ class StudentAdmin(ModelAdmin):
 
     enrollments_count.short_description = "Enrollments"
 
+    def save_formset(self, request, form, formset, change):
+        """
+        Valida 'máximo 1 ACTIVA' sin crear FormSet custom.
+        Si hay más de una, mostramos errores y NO guardamos ese formset,
+        pero dejamos atributos internos para que el admin no falle.
+        """
+        if formset.model is Enrollment:
+            active_count = 0
+            for f in formset.forms:
+                cd = getattr(f, "cleaned_data", None)
+                if not cd or cd.get("DELETE"):
+                    continue
+                if cd.get("status") == EnrollmentStatus.ACTIVE:
+                    active_count += 1
 
-@admin.register(Enrollment)
-class EnrollmentAdmin(ModelAdmin):
-    list_display = (
-        "student",
-        "course",
-        "status",
-        "start_at",
-        "end_at",
-        "progress_percent",
-    )
-    list_filter = ("status",)
-    search_fields = (
-        "student__person__first_name",
-        "student__person__last_name",
-        "course__name",
-    )
-    raw_id_fields = ("student", "course")
-    autocomplete_fields = ("student", "course")
-    list_select_related = ("student__person", "course")
-    date_hierarchy = "start_at"
+            if active_count > 1:
+                formset._non_form_errors = ErrorList([
+                    "Sólo puede haber una matrícula ACTIVA por estudiante."
+                ])
+                form.add_error(
+                    None, "Sólo puede haber una matrícula ACTIVA por estudiante."
+                )
+                self.message_user(
+                    request,
+                    "Revisa las matrículas: sólo puede haber una ACTIVA por estudiante.",  # noqa: E501
+                    level=messages.ERROR,
+                )
+                formset.new_objects = []
+                formset.changed_objects = []
+                formset.deleted_objects = []
+                return
+
+        return super().save_formset(request, form, formset, change)
+
+    def save_related(self, request, form, formsets, change):
+        try:
+            with transaction.atomic():
+                return super().save_related(request, form, formsets, change)
+        except IntegrityError:
+            form.add_error(
+                None,
+                "No se pudo guardar porque se violó una restricción "
+                "(unicidad o una sola matrícula ACTIVA).",
+            )
+            self.message_user(
+                request,
+                "No se pudo guardar: verifica ‘status’ y que no repitas (student, course).",  # noqa: E501
+                level=messages.ERROR,
+            )
