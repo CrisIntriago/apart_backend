@@ -46,7 +46,7 @@ class StudentProfileSerializer(ProfileSerializer):
         read_only=True,
         source="student.language_proficiencies",
     )
-    course = CourseSerializer(read_only=True, source="student.course")
+    course = CourseSerializer(read_only=True, source="student.active_course")
 
     class Meta(ProfileSerializer.Meta):
         model = Person

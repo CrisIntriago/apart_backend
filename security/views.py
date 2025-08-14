@@ -171,8 +171,8 @@ class LoginView(APIView):
 
                     courses = [e.course for e in enrollments_qs if e.course is not None]
 
-                    if not courses and getattr(student, "course", None):
-                        courses = [student.course]
+                    if not courses and getattr(student, "active_course", None):
+                        courses = [student.active_course]
 
                     courses_data = CourseSerializer(courses, many=True).data
                 return Response(
@@ -223,8 +223,8 @@ class LoginView(APIView):
 
             courses = [e.course for e in enrollments_qs if e.course is not None]
 
-            if not courses and getattr(student, "course", None):
-                courses = [student.course]
+            if not courses and getattr(student, "active_course", None):
+                courses = [student.active_course]
 
             courses_data = CourseSerializer(courses, many=True).data
 
