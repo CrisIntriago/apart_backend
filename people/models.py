@@ -28,7 +28,7 @@ class Person(models.Model):
     )
     country = models.CharField(max_length=100, default="")
     languages = models.JSONField(default=list)
-    hasAccess = models.BooleanField(default=False)
+    has_access = models.BooleanField(default=False)
 
     def __str__(self):
         return f"{self.first_name} {self.last_name}"
