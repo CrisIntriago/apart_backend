@@ -3,16 +3,15 @@ from rest_framework import status
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from django.shortcuts import get_object_or_404
 
 from content.models import Vocabulary
 from content.serializers import VocabularySerializer
 from people.models import Student
 
 from .serializers import (
+    StudentDescriptionUpdateSerializer,
     StudentProfileSerializer,
     UpdateAccessSerializer,
-    StudentDescriptionUpdateSerializer,
 )
 
 
@@ -44,6 +43,24 @@ class StudentProfileView(APIView):
         serializer = StudentProfileSerializer(person, context={"request": request})
         return Response(serializer.data)
 
+    def patch(self, request):
+        person = getattr(request.user, "person", None)
+        if not person or not getattr(person, "student", None):
+            return Response(
+                {"detail": "No hay perfil de estudiante asociado."},
+                status=400,
+            )
+
+        in_serializer = StudentDescriptionUpdateSerializer(data=request.data)
+        in_serializer.is_valid(raise_exception=True)
+
+        student = person.student
+        student.description = in_serializer.validated_data["description"]
+        student.save(update_fields=["description"])
+
+        out_serializer = StudentProfileSerializer(person, context={"request": request})
+        return Response(out_serializer.data, status=200)
+
 
 class UpdateAccessView(APIView):
     permission_classes = [IsAuthenticated]
@@ -71,24 +88,6 @@ class UpdateAccessView(APIView):
             {"detail": "Acceso actualizado", "has_access": person.has_access},
             status=status.HTTP_200_OK,
         )
-
-    def patch(self, request):
-        person = getattr(request.user, "person", None)
-        if not person or not getattr(person, "student", None):
-            return Response(
-                {"detail": "No hay perfil de estudiante asociado."},
-                status=400,
-            )
-
-        in_serializer = StudentDescriptionUpdateSerializer(data=request.data)
-        in_serializer.is_valid(raise_exception=True)
-
-        student = person.student
-        student.description = in_serializer.validated_data["description"]
-        student.save(update_fields=["description"])
-
-        out_serializer = StudentProfileSerializer(person, context={"request": request})
-        return Response(out_serializer.data, status=200)
 
 
 class MyVocabularyView(APIView):
