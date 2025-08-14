@@ -1,4 +1,4 @@
-from django.db.models import Prefetch
+from django.db.models import Count, Prefetch, Q
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
 from drf_spectacular.utils import (
@@ -135,9 +135,10 @@ class CourseExamsView(APIView):
                     "description": "Upa",
                     "is_published": True,
                     "time_limit_minutes": 30,
-                    "attempts_allowed": 1,
+                    "attempts_allowed": 3,
                     "pass_mark_percent": 60,
-                    "user_attempts_count": 2,
+                    "has_attempts_left": True,
+                    "remaining_attempts": 2,
                     "user_last_attempt_at": "2025-08-10T15:32:21Z",
                     "user_percentage": "82.50",
                     "user_passed": True,
@@ -148,19 +149,44 @@ class CourseExamsView(APIView):
     )
     def get(self, request, pk):
         course = get_object_or_404(Course, pk=pk)
-        user_attempts_qs = (
+
+        graded_or_expired_qs = (
             ExamAttempt.objects.filter(
-                user_id=request.user.id, status=ExamAttemptStatus.GRADED
+                user_id=request.user.id,
+                status__in=[ExamAttemptStatus.GRADED, ExamAttemptStatus.EXPIRED],
             )
             .only("exam_id", "percentage", "passed", "graded_at", "finished_at")
             .order_by("-percentage", "-graded_at")
         )
 
-        exams = course.exams.filter(is_published=True).prefetch_related(
-            Prefetch(
-                "attempts", queryset=user_attempts_qs, to_attr="user_graded_attempts"
+        USED_STATUSES = [
+            ExamAttemptStatus.IN_PROGRESS,
+            ExamAttemptStatus.SUBMITTED,
+            ExamAttemptStatus.GRADED,
+            ExamAttemptStatus.EXPIRED,
+        ]
+
+        exams = (
+            course.exams.filter(is_published=True)
+            .annotate(
+                user_used_attempts_count=Count(
+                    "attempts",
+                    filter=Q(
+                        attempts__user_id=request.user.id,
+                        attempts__status__in=USED_STATUSES,
+                    ),
+                    distinct=True,
+                )
+            )
+            .prefetch_related(
+                Prefetch(
+                    "attempts",
+                    queryset=graded_or_expired_qs,
+                    to_attr="user_graded_attempts",
+                )
             )
         )
+
         serializer = ExamSerializer(exams, many=True, context={"request": request})
         return Response(serializer.data)
 
