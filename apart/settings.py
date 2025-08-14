@@ -3,6 +3,7 @@ import sys
 from pathlib import Path
 
 import environ
+from django.templatetags.static import static
 
 """
 Django settings for apart project.
@@ -257,6 +258,46 @@ UNFOLD = {
     "SITE_HEADER": "Apart",
     "SHOW_COUNTS": True,
     "DARK_MODE": False,
+    "THEME": "light",
+    "COLORS": {
+        "base": {
+            "50": "255, 255, 255",
+            "100": "245, 245, 245",
+            "200": "230, 230, 230",
+            "300": "210, 210, 210",
+            "400": "170, 170, 170",
+            "500": "130, 130, 130",
+            "600": "90, 90, 90",
+            "700": "60, 60, 60",
+            "800": "40, 40, 40",
+            "900": "20, 20, 20",
+            "950": "0, 0, 0",
+        },
+        "primary": {
+            "50": "250, 250, 250",
+            "100": "235, 235, 235",
+            "200": "215, 215, 215",
+            "300": "185, 185, 185",
+            "400": "145, 145, 145",
+            "500": "110, 110, 110",
+            "600": "80, 80, 80",
+            "700": "55, 55, 55",
+            "800": "35, 35, 35",
+            "900": "15, 15, 15",
+            "950": "0, 0, 0",
+        },
+        "font": {
+            "subtle-light": "var(--color-base-500)",
+            "subtle-dark": "var(--color-base-400)",
+            "default-light": "var(--color-base-600)",
+            "default-dark": "var(--color-base-300)",
+            "important-light": "var(--color-base-900)",
+            "important-dark": "var(--color-base-100)",
+        },
+    },
+    "STYLES": [
+        lambda request: static("css/custom-font.css"),
+    ],
 }
 
 AUTHENTICATION_BACKENDS = [
