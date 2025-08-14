@@ -80,6 +80,7 @@ INSTALLED_APPS = [
     "security",
     "drf_spectacular",
     "activities",
+    "dalf",
 ]
 
 SOCIALACCOUNT_PROVIDERS = {
