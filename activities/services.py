@@ -10,9 +10,11 @@ from django.utils import timezone
 from activities.models.base import Activity, UserAnswer
 from activities.models.matching import MatchingActivity
 from activities.strategies.validation.registry import ValidationStrategyRegistry
-from content.models import Vocabulary
-from people.models import Person, Student
+from content.models import Course, Vocabulary
+from people.models import Enrollment, EnrollmentStatus, Person, Student
 from utils.enums import ActivityType
+
+from .services import CourseProgressService
 
 
 class AnswerSubmissionService:
@@ -30,6 +32,9 @@ class AnswerSubmissionService:
             activity, serializer.validated_data, is_correct
         )
         transaction.on_commit(lambda: self._create_vocabulary_if_applicable(activity))
+        transaction.on_commit(
+            lambda: self._update_enrollment_progress(activity.module.course)
+        )
         return user_answer
 
     def _get_activity(self):
@@ -110,6 +115,22 @@ class AnswerSubmissionService:
             )
             created.append(svc.execute())
         return created
+
+    def _update_enrollment_progress(self, course: Course):
+        enrollment = Enrollment.objects.filter(
+            student__person__user=self.user,
+            course=course,
+            status=EnrollmentStatus.ACTIVE,
+        ).first()
+
+        if not enrollment:
+            return
+
+        progress_service = CourseProgressService(course=course, user=self.user)
+        progress_data = progress_service.compute()
+
+        enrollment.progress_percent = progress_data.overall["percent"]
+        enrollment.save(update_fields=["progress_percent"])
 
 
 class LeaderboardService:
