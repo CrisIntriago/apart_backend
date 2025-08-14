@@ -304,7 +304,8 @@ class FinishAttemptAndSubmitAnswersView(APIView):
             )
         },
     )
-    def post(self, request, attempt_id: int):
+    def post(self, request, exam_id: int):
+        attempt_id = request.data.get("attempt_id")
         attempt = ExamAttempt.objects.select_related("exam").get(pk=attempt_id)
         if attempt.user_id != request.user.id:
             return Response({"detail": "Forbidden."}, status=status.HTTP_403_FORBIDDEN)
