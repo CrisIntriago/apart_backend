@@ -109,6 +109,9 @@ class Enrollment(models.Model):
             return False
         return True
 
+    def __str__(self):
+        return f"{self.student} enrolled in {self.course} ({self.status})"
+
 
 class StudentLanguageProficiency(models.Model):
     class Meta:
