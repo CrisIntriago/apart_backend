@@ -28,7 +28,8 @@ class CourseSerializer(serializers.ModelSerializer):
 
 
 class ExamSerializer(serializers.ModelSerializer):
-    user_attempts_count = serializers.SerializerMethodField()
+    has_attempts_left = serializers.SerializerMethodField()
+    remaining_attempts = serializers.SerializerMethodField()
     user_last_attempt_at = serializers.SerializerMethodField()
     user_percentage = serializers.SerializerMethodField()
     user_passed = serializers.SerializerMethodField()
@@ -45,7 +46,8 @@ class ExamSerializer(serializers.ModelSerializer):
             "time_limit_minutes",
             "attempts_allowed",
             "pass_mark_percent",
-            "user_attempts_count",
+            "has_attempts_left",
+            "remaining_attempts",
             "user_last_attempt_at",
             "user_percentage",
             "user_passed",
@@ -54,29 +56,38 @@ class ExamSerializer(serializers.ModelSerializer):
     def _user_attempts(self, obj):
         return getattr(obj, "user_graded_attempts", None)
 
-    def get_user_attempts_count(self, obj):
-        attempts = self._user_attempts(obj)
-        return len(attempts) if attempts is not None else 0
+    def get_remaining_attempts(self, obj):
+        allowed = obj.attempts_allowed
+        if allowed is None:
+            return None
+        used = getattr(obj, "user_used_attempts_count", 0) or 0
+        remaining = max(allowed - used, 0)
+        return remaining
+
+    def get_has_attempts_left(self, obj):
+        remaining = self.get_remaining_attempts(obj)
+        if remaining is None:
+            return True
+        return remaining > 0
 
     def get_user_last_attempt_at(self, obj):
         attempts = self._user_attempts(obj)
         if not attempts:
             return None
         last = max(attempts, key=lambda a: (a.graded_at or a.finished_at))
-        return last.graded_at or last.finished_at
+        dt = last.graded_at or last.finished_at
+        return dt.isoformat().replace("+00:00", "Z") if dt else None
 
     def get_user_percentage(self, obj):
         attempts = self._user_attempts(obj)
         if not attempts:
             return None
         best = attempts[0]
-        return f"{best.percentage:.2f}"
+        return f"{best.percentage:.2f}" if best.percentage is not None else None
 
     def get_user_passed(self, obj):
         attempts = self._user_attempts(obj)
-        if not attempts:
-            return False
-        return any(a.passed for a in attempts)
+        return any(a.passed for a in (attempts or []))
 
 
 class AnswerInputItemSerializer(serializers.Serializer):
