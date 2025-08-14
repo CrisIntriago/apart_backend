@@ -41,4 +41,14 @@ class StudentProfileSerializer(ProfileSerializer):
 
     class Meta(ProfileSerializer.Meta):
         model = Person
-        fields = ProfileSerializer.Meta.fields + ("languages", "course")
+        fields = ProfileSerializer.Meta.fields + ("description", "languages", "course")
+
+
+class StudentDescriptionUpdateSerializer(serializers.Serializer):
+    description = serializers.CharField(
+        allow_blank=True,
+        allow_null=True,
+        required=True,
+        max_length=2000,
+        help_text="Descripción breve del estudiante.",
+    )

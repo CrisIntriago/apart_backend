@@ -126,3 +126,25 @@ class VocabularySerializer(serializers.ModelSerializer):
     class Meta:
         model = Vocabulary
         fields = ("id", "word", "meaning", "difficulty")
+
+
+class ModuleProgressSerializer(serializers.Serializer):
+    id = serializers.IntegerField()
+    name = serializers.CharField()
+    total = serializers.IntegerField()
+    completed = serializers.IntegerField()
+    remaining = serializers.IntegerField()
+    percent = serializers.FloatField()
+
+
+class OverallProgressSerializer(serializers.Serializer):
+    total = serializers.IntegerField()
+    completed = serializers.IntegerField()
+    remaining = serializers.IntegerField()
+    percent = serializers.FloatField()
+
+
+class CourseProgressSerializer(serializers.Serializer):
+    course = serializers.DictField()
+    overall = OverallProgressSerializer()
+    modules = ModuleProgressSerializer(many=True)
