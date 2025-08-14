@@ -30,7 +30,7 @@ class ProfileSerializer(serializers.ModelSerializer):
             "date_of_birth",
             "photo",
             "country",
-            "email"
+            "email",
         )
 
 
@@ -50,15 +50,11 @@ class StudentProfileSerializer(ProfileSerializer):
 
     class Meta(ProfileSerializer.Meta):
         model = Person
-        fields = ProfileSerializer.Meta.fields + ("languages", "course")
+        fields = ProfileSerializer.Meta.fields + ("description", "languages", "course")
+
 
 class UpdateAccessSerializer(serializers.Serializer):
     hasAccess = serializers.BooleanField()
-    fields = ProfileSerializer.Meta.fields + (
-            "description",
-            "languages",
-            "course",
-        )
 
 
 class StudentDescriptionUpdateSerializer(serializers.Serializer):
