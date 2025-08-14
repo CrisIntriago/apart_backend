@@ -1,3 +1,4 @@
+from dalf.admin import DALFModelAdmin, DALFRelatedFieldAjax
 from django.contrib import admin, messages
 from django.contrib.admin import SimpleListFilter
 from django.db import IntegrityError, transaction
@@ -149,7 +150,7 @@ class ActiveNowFilter(SimpleListFilter):
 
 
 @admin.register(Enrollment)
-class EnrollmentAdmin(admin.ModelAdmin):
+class EnrollmentAdmin(DALFModelAdmin):  # 👈 usar DALFModelAdmin
     list_display = (
         "id",
         "student_link",
@@ -171,12 +172,9 @@ class EnrollmentAdmin(admin.ModelAdmin):
     list_filter = (
         ActiveNowFilter,
         "status",
+        ("student", DALFRelatedFieldAjax),
+        ("course", DALFRelatedFieldAjax),
     )
-    search_help_text = (
-        "Busca por alumno o por curso (nombre). "
-        "Ej: 'María', 'perez', 'alumno@correo.com', 'Inglés Intermedio'."
-    )
-
     date_hierarchy = "enrolled_at"
     ordering = ("-enrolled_at",)
     autocomplete_fields = ("student", "course")

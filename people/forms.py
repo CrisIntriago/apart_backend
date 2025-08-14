@@ -65,6 +65,12 @@ class StudentAdminForm(forms.ModelForm):
         model = Student
         fields = "__all__"
 
+    search_fields = (
+        "person__first_name",
+        "person__last_name",
+        "person__user__email",
+    )
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         f = self.fields.get("active_course")
