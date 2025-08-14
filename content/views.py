@@ -118,6 +118,8 @@ class CourseStudentsView(APIView):
 
 
 class CourseExamsView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
     @extend_schema(
         tags=["Exams"],
         summary="Obtener los exámenes publicados de un curso",
@@ -148,7 +150,7 @@ class CourseExamsView(APIView):
         course = get_object_or_404(Course, pk=pk)
         user_attempts_qs = (
             ExamAttempt.objects.filter(
-                user=request.user, status=ExamAttemptStatus.GRADED
+                user_id=request.user.id, status=ExamAttemptStatus.GRADED
             )
             .only("exam_id", "percentage", "passed", "graded_at", "finished_at")
             .order_by("-percentage", "-graded_at")
