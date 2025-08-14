@@ -52,6 +52,7 @@ else:
 SITE_ID = 1
 
 INSTALLED_APPS = [
+    "corsheaders",
     "unfold",
     "unfold.contrib.filters",
     "unfold.contrib.forms",
@@ -211,7 +212,7 @@ AUTH_PASSWORD_VALIDATORS = [
 
 LANGUAGE_CODE = "en-us"
 
-TIME_ZONE = "UTC"
+TIME_ZONE = "America/Guayaquil"
 
 USE_I18N = True
 
@@ -247,6 +248,7 @@ STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
 CORS_ALLOWED_ORIGINS = [
     "https://apart-frontend-application.vercel.app",
     "http://localhost:3000",
+    "http://localhost:8101",
     "https://www.study-apart.com",
 ]
 
