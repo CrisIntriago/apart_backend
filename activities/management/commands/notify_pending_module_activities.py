@@ -69,7 +69,7 @@ class Command(BaseCommand):
             course: Course = module.course
 
             students_qs = (
-                Student.objects.filter(course=course)
+                Student.objects.filter(active_course=course)
                 .select_related("person__user")
                 .distinct()
             )
