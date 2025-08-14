@@ -101,12 +101,6 @@ class ExamGradingService:
 
 
 class CourseProgressService:
-    """
-    Calcula el avance de un curso para un usuario:
-    - overall: totales del curso (total, completadas, restantes, porcentaje)
-    - modules: lista de módulos con su propio avance
-    """
-
     def __init__(self, course: Course, user: User):
         self.course = course
         self.user = user
@@ -118,6 +112,7 @@ class CourseProgressService:
             UserAnswer.objects.filter(
                 user=self.user,
                 activity__module__course=self.course,
+                is_correct=True,
             )
             .values("activity_id")
             .distinct()
@@ -136,7 +131,10 @@ class CourseProgressService:
                 total=Count("activities", distinct=True),
                 completed=Count(
                     "activities",
-                    filter=Q(activities__answers__user=self.user),
+                    filter=Q(
+                        activities__answers__user=self.user,
+                        activities__answers__is_correct=True,
+                    ),
                     distinct=True,
                 ),
             )
