@@ -65,30 +65,30 @@ class AnswerSubmissionService:
         )
 
     def _create_vocabulary_if_applicable(self, activity: Activity):
-        difficulty = activity.difficulty
         if activity.type != ActivityType.MATCH:
             return
+
         try:
-            activity = MatchingActivity.objects.get(pk=activity.id)
+            matching_activity = MatchingActivity.objects.get(pk=activity.id)
         except MatchingActivity.DoesNotExist:
             return
+
         try:
-            student_id = (
-                Student.objects.select_related("person")
-                .only("id", "person__id")
-                .values_list("id", flat=True)
-                .get(person__user_id=self.user.id)
-            )
+            student = Student.objects.get(person__user=self.user)
         except Student.DoesNotExist:
             return
 
-        pairs_qs = activity.pairs.filter(is_vocabulary=True).values("left", "right")
+        difficulty = matching_activity.difficulty
+        pairs_qs = matching_activity.pairs.filter(is_vocabulary=True).values(
+            "left", "right"
+        )
+
         if not pairs_qs:
             return
 
         vocab_to_create = [
             Vocabulary(
-                student_id=student_id,
+                student=student,
                 word=row["left"],
                 meaning=row["right"],
                 difficulty=difficulty,
@@ -96,10 +96,7 @@ class AnswerSubmissionService:
             for row in pairs_qs
         ]
 
-        if not vocab_to_create:
-            return
-
-        with transaction.atomic():
+        if vocab_to_create:
             Vocabulary.objects.bulk_create(vocab_to_create, ignore_conflicts=True)
 
     @classmethod
