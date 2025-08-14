@@ -19,6 +19,8 @@ class StudentLanguageProficiencySerializer(serializers.ModelSerializer):
 
 
 class ProfileSerializer(serializers.ModelSerializer):
+    email = serializers.EmailField(source="user.email", read_only=True)
+
     class Meta:
         model = Person
         fields = (
@@ -28,6 +30,7 @@ class ProfileSerializer(serializers.ModelSerializer):
             "date_of_birth",
             "photo",
             "country",
+            "email"
         )
 
 
@@ -42,3 +45,6 @@ class StudentProfileSerializer(ProfileSerializer):
     class Meta(ProfileSerializer.Meta):
         model = Person
         fields = ProfileSerializer.Meta.fields + ("languages", "course")
+
+class UpdateAccessSerializer(serializers.Serializer):
+    hasAccess = serializers.BooleanField()

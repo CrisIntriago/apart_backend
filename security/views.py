@@ -139,11 +139,9 @@ class LoginView(APIView):
                 login(request, user,
                       backend='django.contrib.auth.backends.ModelBackend')
                 user = user_model.objects.get(email=email)
-                print(f"Usuario autenticado: {user}")
                 token = login_user(user)
                 courses_data = []
                 person = getattr(user, "person", None)
-                print(f"Person: {person}")
                 student = getattr(person, "student", None) if person else None
                 if student and getattr(student, "course", None):
                     courses_data = CourseSerializer(
