@@ -32,6 +32,12 @@ class ProfileSerializer(serializers.ModelSerializer):
 
 
 class StudentProfileSerializer(ProfileSerializer):
+    description = serializers.CharField(
+        source="student.description",
+        allow_blank=True,
+        allow_null=True,
+        read_only=True,
+    )
     languages = StudentLanguageProficiencySerializer(
         many=True,
         read_only=True,
@@ -41,7 +47,11 @@ class StudentProfileSerializer(ProfileSerializer):
 
     class Meta(ProfileSerializer.Meta):
         model = Person
-        fields = ProfileSerializer.Meta.fields + ("description", "languages", "course")
+        fields = ProfileSerializer.Meta.fields + (
+            "description",
+            "languages",
+            "course",
+        )
 
 
 class StudentDescriptionUpdateSerializer(serializers.Serializer):
