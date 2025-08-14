@@ -14,8 +14,6 @@ from content.models import Course, Vocabulary
 from people.models import Enrollment, EnrollmentStatus, Person, Student
 from utils.enums import ActivityType
 
-from .services import CourseProgressService
-
 
 class AnswerSubmissionService:
     def __init__(self, user, activity_id, input_data, exam_attempt=None):
@@ -114,6 +112,8 @@ class AnswerSubmissionService:
         return created
 
     def _update_enrollment_progress(self, course: Course):
+        from content.services import CourseProgressService
+
         enrollment = Enrollment.objects.filter(
             student__person__user=self.user,
             course=course,
