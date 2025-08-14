@@ -12,6 +12,7 @@ from .models import (
     Student,
     StudentLanguageProficiency,
 )
+from .utils import sync_active_course
 
 
 @admin.register(Person)
@@ -59,6 +60,7 @@ class StudentAdmin(ModelAdmin):
     raw_id_fields = ("person",)
     inlines = [EnrollmentInline]
     list_select_related = ("person",)
+    readonly_fields = ("active_course",)
 
     def enrollments_count(self, obj):
         return obj.enrollments.count()
@@ -102,7 +104,13 @@ class StudentAdmin(ModelAdmin):
     def save_related(self, request, form, formsets, change):
         try:
             with transaction.atomic():
-                return super().save_related(request, form, formsets, change)
+                resp = super().save_related(request, form, formsets, change)
+
+                student = form.instance
+                if student and student.pk:
+                    sync_active_course(student)
+
+                return resp
         except IntegrityError:
             form.add_error(
                 None,
