@@ -1,8 +1,13 @@
 from django.contrib import admin
 from unfold.admin import ModelAdmin, TabularInline
 
-from .forms import PersonAdminForm
-from .models import Enrollment, Person, Student, StudentLanguageProficiency
+from .forms import PersonAdminForm, StudentAdminForm
+from .models import (
+    Enrollment,
+    Person,
+    Student,
+    StudentLanguageProficiency,
+)
 
 
 @admin.register(Person)
@@ -44,7 +49,12 @@ class EnrollmentInline(TabularInline):
 
 @admin.register(Student)
 class StudentAdmin(ModelAdmin):
-    list_display = ("person", "enrollments_count", "active_courses_display")
+    form = StudentAdminForm
+    list_display = (
+        "person",
+        "enrollments_count",
+        "active_course",
+    )
     search_fields = ("person__first_name", "person__last_name", "person__user__email")
     raw_id_fields = ("person",)
     inlines = [StudentLanguageProficiencyInline, EnrollmentInline]
@@ -54,16 +64,6 @@ class StudentAdmin(ModelAdmin):
         return obj.enrollments.count()
 
     enrollments_count.short_description = "Enrollments"
-
-    def active_courses_display(self, obj):
-        active = [
-            e.course.name
-            for e in obj.enrollments.select_related("course")
-            if e.course and e.is_active_now()
-        ]
-        return ", ".join(active) if active else "—"
-
-    active_courses_display.short_description = "Cursos activos"
 
 
 @admin.register(Enrollment)

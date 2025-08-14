@@ -1,3 +1,4 @@
+from django.core.exceptions import ValidationError
 from django.db import models
 from django.utils import timezone
 
@@ -48,12 +49,14 @@ class Student(models.Model):
         null=True,
         blank=True,
     )
-    course = models.ForeignKey(
+
+    active_course = models.ForeignKey(
         "content.Course",
         on_delete=models.SET_NULL,
-        related_name="students_legacy",
+        related_name="active_students",
         null=True,
         blank=True,
+        help_text="Curso actualmente activo del estudiante.",
     )
 
     description = models.TextField(
@@ -62,6 +65,35 @@ class Student(models.Model):
 
     def __str__(self):
         return f"{self.person.first_name} {self.person.last_name} (Student)"
+
+    def clean(self):
+        super().clean()
+        if self.active_course_id:
+            now = timezone.now()
+            has_active_enrollment = (
+                self.enrollments.filter(
+                    course_id=self.active_course_id,
+                    status=EnrollmentStatus.ACTIVE,
+                )
+                .filter(
+                    models.Q(start_at__isnull=True) | models.Q(start_at__lte=now),
+                    models.Q(end_at__isnull=True) | models.Q(end_at__gte=now),
+                )
+                .exists()
+            )
+            if not has_active_enrollment:
+                raise ValidationError({
+                    "active_course": "El curso seleccionado no está activo para este estudiante en este momento."  # noqa: E501
+                })
+
+    def save(self, *args, **kwargs):
+        self.full_clean()
+        return super().save(*args, **kwargs)
+
+    def set_active_course(self, course):
+        self.active_course = course
+        self.full_clean()
+        self.save(update_fields=["active_course"])
 
 
 class Enrollment(models.Model):
@@ -72,7 +104,12 @@ class Enrollment(models.Model):
         constraints = [
             models.UniqueConstraint(
                 fields=["student", "course"], name="uq_enrollment_student_course"
-            )
+            ),
+            models.UniqueConstraint(
+                fields=["student"],
+                condition=models.Q(status=EnrollmentStatus.ACTIVE),
+                name="uq_one_active_enrollment_per_student",
+            ),
         ]
         indexes = [
             models.Index(fields=["student", "course", "status"]),

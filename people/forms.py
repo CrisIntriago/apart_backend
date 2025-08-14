@@ -1,8 +1,11 @@
 from django import forms
+from django.db import models
+from django.utils import timezone
 
 from users.models import User
+from utils.enums import EnrollmentStatus
 
-from .models import Person
+from .models import Person, Student
 
 
 class PersonAdminForm(forms.ModelForm):
@@ -58,3 +61,30 @@ class PersonAdminForm(forms.ModelForm):
             )
             self.instance.user = user
         return super().save(commit)
+
+
+class StudentAdminForm(forms.ModelForm):
+    class Meta:
+        model = Student
+        fields = "__all__"
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        instance: Student = self.instance
+        if instance and instance.pk:
+            now = timezone.now()
+            active_course_ids = (
+                instance.enrollments.filter(status=EnrollmentStatus.ACTIVE)
+                .filter(
+                    models.Q(start_at__isnull=True) | models.Q(start_at__lte=now),
+                    models.Q(end_at__isnull=True) | models.Q(end_at__gte=now),
+                )
+                .values_list("course_id", flat=True)
+            )
+            self.fields["active_course"].queryset = self.fields[
+                "active_course"
+            ].queryset.filter(id__in=active_course_ids)
+        else:
+            self.fields["active_course"].queryset = self.fields[
+                "active_course"
+            ].queryset.none()
