@@ -8,7 +8,11 @@ from content.models import Vocabulary
 from content.serializers import VocabularySerializer
 from people.models import Student
 
-from .serializers import StudentDescriptionUpdateSerializer, StudentProfileSerializer
+from .serializers import (
+    StudentDescriptionUpdateSerializer,
+    StudentProfileSerializer,
+    UpdateAccessSerializer,
+)
 
 
 class StudentProfileView(APIView):
@@ -24,7 +28,13 @@ class StudentProfileView(APIView):
     )
     def get(self, request):
         person = getattr(request.user, "person", None)
-        if not person or not getattr(person, "student", None):
+        if not person:
+            return Response(
+                {"detail": "No hay perfil de persona asociado."},
+                status=400,
+            )
+        student = getattr(person, "student", None)
+        if not student:
             return Response(
                 {"detail": "No hay perfil de estudiante asociado."},
                 status=400,
@@ -50,6 +60,34 @@ class StudentProfileView(APIView):
 
         out_serializer = StudentProfileSerializer(person, context={"request": request})
         return Response(out_serializer.data, status=200)
+
+
+class UpdateAccessView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    @extend_schema(
+        summary="Actualizar acceso",
+        description="Actualiza el estado de acceso del usuario autenticado.",
+        request=UpdateAccessSerializer,
+        responses={
+            200: "Acceso actualizado.",
+            400: "Solicitud inválida.",
+        },
+    )
+    def post(self, request):
+        serializer = UpdateAccessSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        person = getattr(request.user, "person", None)
+        if not person:
+            return Response(
+                {"detail": "No hay perfil de persona asociado."}, status=400
+            )
+        person.has_access = serializer.validated_data["hasAccess"]
+        person.save()
+        return Response(
+            {"detail": "Acceso actualizado", "has_access": person.has_access},
+            status=status.HTTP_200_OK,
+        )
 
 
 class MyVocabularyView(APIView):

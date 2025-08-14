@@ -19,6 +19,8 @@ class StudentLanguageProficiencySerializer(serializers.ModelSerializer):
 
 
 class ProfileSerializer(serializers.ModelSerializer):
+    email = serializers.EmailField(source="user.email", read_only=True)
+
     class Meta:
         model = Person
         fields = (
@@ -28,20 +30,31 @@ class ProfileSerializer(serializers.ModelSerializer):
             "date_of_birth",
             "photo",
             "country",
+            "email",
         )
 
 
 class StudentProfileSerializer(ProfileSerializer):
+    description = serializers.CharField(
+        source="student.description",
+        allow_blank=True,
+        allow_null=True,
+        read_only=True,
+    )
     languages = StudentLanguageProficiencySerializer(
         many=True,
         read_only=True,
         source="student.language_proficiencies",
     )
-    course = CourseSerializer(read_only=True, source="student.course")
+    course = CourseSerializer(read_only=True, source="student.active_course")
 
     class Meta(ProfileSerializer.Meta):
         model = Person
         fields = ProfileSerializer.Meta.fields + ("description", "languages", "course")
+
+
+class UpdateAccessSerializer(serializers.Serializer):
+    hasAccess = serializers.BooleanField()
 
 
 class StudentDescriptionUpdateSerializer(serializers.Serializer):

@@ -10,8 +10,8 @@ from django.utils import timezone
 from activities.models.base import Activity, UserAnswer
 from activities.models.matching import MatchingActivity
 from activities.strategies.validation.registry import ValidationStrategyRegistry
-from content.models import Vocabulary
-from people.models import Person, Student
+from content.models import Course, Vocabulary
+from people.models import Enrollment, EnrollmentStatus, Person, Student
 from utils.enums import ActivityType
 
 
@@ -30,6 +30,9 @@ class AnswerSubmissionService:
             activity, serializer.validated_data, is_correct
         )
         transaction.on_commit(lambda: self._create_vocabulary_if_applicable(activity))
+        transaction.on_commit(
+            lambda: self._update_enrollment_progress(activity.module.course)
+        )
         return user_answer
 
     def _get_activity(self):
@@ -60,30 +63,30 @@ class AnswerSubmissionService:
         )
 
     def _create_vocabulary_if_applicable(self, activity: Activity):
-        difficulty = activity.difficulty
         if activity.type != ActivityType.MATCH:
             return
+
         try:
-            activity = MatchingActivity.objects.get(pk=activity.id)
+            matching_activity = MatchingActivity.objects.get(pk=activity.id)
         except MatchingActivity.DoesNotExist:
             return
+
         try:
-            student_id = (
-                Student.objects.select_related("person")
-                .only("id", "person__id")
-                .values_list("id", flat=True)
-                .get(person__user_id=self.user.id)
-            )
+            student = Student.objects.get(person__user=self.user)
         except Student.DoesNotExist:
             return
 
-        pairs_qs = activity.pairs.filter(is_vocabulary=True).values("left", "right")
+        difficulty = matching_activity.difficulty
+        pairs_qs = matching_activity.pairs.filter(is_vocabulary=True).values(
+            "left", "right"
+        )
+
         if not pairs_qs:
             return
 
         vocab_to_create = [
             Vocabulary(
-                student_id=student_id,
+                student=student,
                 word=row["left"],
                 meaning=row["right"],
                 difficulty=difficulty,
@@ -91,10 +94,7 @@ class AnswerSubmissionService:
             for row in pairs_qs
         ]
 
-        if not vocab_to_create:
-            return
-
-        with transaction.atomic():
+        if vocab_to_create:
             Vocabulary.objects.bulk_create(vocab_to_create, ignore_conflicts=True)
 
     @classmethod
@@ -110,6 +110,24 @@ class AnswerSubmissionService:
             )
             created.append(svc.execute())
         return created
+
+    def _update_enrollment_progress(self, course: Course):
+        from content.services import CourseProgressService
+
+        enrollment = Enrollment.objects.filter(
+            student__person__user=self.user,
+            course=course,
+            status=EnrollmentStatus.ACTIVE,
+        ).first()
+
+        if not enrollment:
+            return
+
+        progress_service = CourseProgressService(course=course, user=self.user)
+        progress_data = progress_service.compute()
+
+        enrollment.progress_percent = progress_data.overall["percent"]
+        enrollment.save(update_fields=["progress_percent"])
 
 
 class LeaderboardService:

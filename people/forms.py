@@ -2,7 +2,7 @@ from django import forms
 
 from users.models import User
 
-from .models import Person
+from .models import Person, Student
 
 
 class PersonAdminForm(forms.ModelForm):
@@ -58,3 +58,22 @@ class PersonAdminForm(forms.ModelForm):
             )
             self.instance.user = user
         return super().save(commit)
+
+
+class StudentAdminForm(forms.ModelForm):
+    class Meta:
+        model = Student
+        fields = "__all__"
+
+    search_fields = (
+        "person__first_name",
+        "person__last_name",
+        "person__user__email",
+    )
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        f = self.fields.get("active_course")
+        if f:
+            f.disabled = True
+            f.help_text = "Se calcula automáticamente y no puede modificarse."

@@ -32,6 +32,12 @@ class Course(models.Model):
         default=DifficultyLevel.MEDIUM,
         blank=True,
     )
+    students = models.ManyToManyField(
+        "people.Student",
+        through="people.Enrollment",
+        related_name="courses",
+        blank=True,
+    )
 
     def __str__(self):
         return f"{self.name}"
