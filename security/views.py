@@ -16,6 +16,7 @@ from rest_framework import status
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from rest_framework.views import APIView
+from django.contrib.auth import authenticate
 
 from content.serializers import CourseSerializer
 from users.models import User
@@ -29,10 +30,11 @@ from .serializers import (
     LoginSerializer,
     PasswordResetRequestSerializer,
     RegisterSerializer,
-    LoginGoogleSerializer,
     RegisterGoogleSerializer,
+    LoginGoogleSerializer,
 )
 from .services import PasswordResetService, login_user, register_token, register_user
+import logging
 
 
 class RegisterView(APIView):
@@ -98,7 +100,10 @@ class LoginView(APIView):
     permission_classes = [AllowAny]
 
     @extend_schema(
-        request=LoginSerializer,
+         request={
+            "application/json": LoginSerializer,
+            "application/json;google": LoginGoogleSerializer,
+        },
         responses={200: None},
         summary="Inicio de sesión",
         description="Inicia sesión con un usuario y devuelve su token",
@@ -131,8 +136,18 @@ class LoginView(APIView):
                         status=status.HTTP_404_NOT_FOUND
                     )
 
-                login(request, user, backend='django.contrib.auth.backends.ModelBackend')
+                login(request, user,
+                      backend='django.contrib.auth.backends.ModelBackend')
+                user = user_model.objects.get(email=email)
+                print(f"Usuario autenticado: {user}")
                 token = login_user(user)
+                courses_data = []
+                person = getattr(user, "person", None)
+                print(f"Person: {person}")
+                student = getattr(person, "student", None) if person else None
+                if student and getattr(student, "course", None):
+                    courses_data = CourseSerializer(
+                        [student.course], many=True).data
                 return Response(
                     {
                         "user": {
@@ -140,6 +155,12 @@ class LoginView(APIView):
                             "username": user.username,
                             "email": user.email,
                             "phone": user.phone,
+                            "first_name": user.person.first_name,
+                            "last_name": user.person.last_name,
+                            "country": user.person.country,
+                            "date_of_birth": user.person.date_of_birth,
+                            "languages": user.person.languages,
+                            "courses": courses_data,
                         },
                         "token": token,
                     },
@@ -272,21 +293,25 @@ class PasswordResetFormView(View):
         check = svc.check_token(self._parse(token))
         if not check.is_valid:
             return render(
-                request, self.template_name, {"invalid": True, "reason": check.reason}
+                request, self.template_name, {
+                    "invalid": True, "reason": check.reason}
             )
         return render(request, self.template_name, {"token": token})
 
     def post(self, request, token):
         svc = PasswordResetService()
         try:
-            svc.reset_with_token(self._parse(token), request.POST.get("password", ""))
+            svc.reset_with_token(self._parse(
+                token), request.POST.get("password", ""))
         except TokenInvalid:
             return render(
-                request, self.template_name, {"invalid": True, "reason": "not_found"}
+                request, self.template_name, {
+                    "invalid": True, "reason": "not_found"}
             )
         except TokenExpired:
             return render(
-                request, self.template_name, {"invalid": True, "reason": "expired"}
+                request, self.template_name, {
+                    "invalid": True, "reason": "expired"}
             )
         except PasswordValidationError as e:
             messages.error(request, "; ".join(e.messages))
