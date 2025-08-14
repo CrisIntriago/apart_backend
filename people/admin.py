@@ -1,4 +1,3 @@
-from dalf.admin import DALFModelAdmin, DALFRelatedFieldAjax
 from django.contrib import admin, messages
 from django.contrib.admin import SimpleListFilter
 from django.db import IntegrityError, transaction
@@ -8,6 +7,9 @@ from django.urls import reverse
 from django.utils.html import format_html
 from django.utils.translation import gettext_lazy as _
 from unfold.admin import ModelAdmin, TabularInline
+from unfold.contrib.filters.admin import (
+    AutocompleteSelectFilter,
+)
 
 from utils.enums import EnrollmentStatus
 
@@ -150,7 +152,7 @@ class ActiveNowFilter(SimpleListFilter):
 
 
 @admin.register(Enrollment)
-class EnrollmentAdmin(DALFModelAdmin):  # 👈 usar DALFModelAdmin
+class EnrollmentAdmin(ModelAdmin):
     list_display = (
         "id",
         "student_link",
@@ -163,22 +165,23 @@ class EnrollmentAdmin(DALFModelAdmin):  # 👈 usar DALFModelAdmin
         "last_activity_at",
     )
     list_select_related = ("student__person", "course")
+
     search_fields = (
         "student__person__first_name",
         "student__person__last_name",
         "student__person__user__email",
         "course__name",
     )
+
     list_filter = (
-        ActiveNowFilter,
+        ("student", AutocompleteSelectFilter),
+        ("course", AutocompleteSelectFilter),
         "status",
-        ("student", DALFRelatedFieldAjax),
-        ("course", DALFRelatedFieldAjax),
     )
+
     date_hierarchy = "enrolled_at"
     ordering = ("-enrolled_at",)
     autocomplete_fields = ("student", "course")
-    actions = []
 
     @admin.display(description="Estudiante", ordering="student__person__first_name")
     def student_link(self, obj):
