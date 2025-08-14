@@ -9,7 +9,11 @@ from content.models import Vocabulary
 from content.serializers import VocabularySerializer
 from people.models import Student
 
-from .serializers import StudentProfileSerializer, UpdateAccessSerializer,StudentDescriptionUpdateSerializer
+from .serializers import (
+    StudentProfileSerializer,
+    UpdateAccessSerializer,
+    StudentDescriptionUpdateSerializer,
+)
 
 
 class StudentProfileView(APIView):
@@ -39,7 +43,8 @@ class StudentProfileView(APIView):
 
         serializer = StudentProfileSerializer(person, context={"request": request})
         return Response(serializer.data)
-    
+
+
 class UpdateAccessView(APIView):
     permission_classes = [IsAuthenticated]
 
@@ -57,10 +62,15 @@ class UpdateAccessView(APIView):
         serializer.is_valid(raise_exception=True)
         person = getattr(request.user, "person", None)
         if not person:
-            return Response({"detail": "No hay perfil de persona asociado."}, status=400)
-        person.hasAccess = serializer.validated_data["hasAccess"]
+            return Response(
+                {"detail": "No hay perfil de persona asociado."}, status=400
+            )
+        person.has_access = serializer.validated_data["hasAccess"]
         person.save()
-        return Response({"detail": "Acceso actualizado", "hasAccess": person.hasAccess}, status=status.HTTP_200_OK)
+        return Response(
+            {"detail": "Acceso actualizado", "has_access": person.has_access},
+            status=status.HTTP_200_OK,
+        )
 
     def patch(self, request):
         person = getattr(request.user, "person", None)
