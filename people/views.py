@@ -13,6 +13,7 @@ from .serializers import (
     StudentProfileSerializer,
     UpdateAccessSerializer,
 )
+from subscriptions.models import Subscription, PlanChoices
 
 
 class StudentProfileView(APIView):
@@ -63,7 +64,8 @@ class StudentProfileView(APIView):
 
 
 class UpdateAccessView(APIView):
-    permission_classes = [IsAuthenticated]
+    #TO-DO Que solo pueda enviar eso el frontend con CROSS  origin para futuro.
+    permission_classes = []
 
     @extend_schema(
         summary="Actualizar acceso",
@@ -75,15 +77,42 @@ class UpdateAccessView(APIView):
         },
     )
     def post(self, request):
+        import logging
+        logger = logging.getLogger("django")
+        logger.info(f"POST /api/people/update-access body: {request.data}")
+
         serializer = UpdateAccessSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        person = getattr(request.user, "person", None)
+        email = request.data.get("email")
+        logger.info(f"Email recibido: {email}")
+        if not email:
+            logger.warning("No se recibió email en la petición.")
+            return Response({"detail": "Email requerido."}, status=400)
+        from people.models import Person
+        person = Person.objects.filter(user__email=email).first()
+        logger.info(f"Persona encontrada: {person}")
         if not person:
-            return Response(
-                {"detail": "No hay perfil de persona asociado."}, status=400
-            )
+            logger.warning(f"No hay perfil de persona asociado a {email}")
+            return Response({"detail": "No hay perfil de persona asociado a ese correo."}, status=400)
         person.has_access = serializer.validated_data["hasAccess"]
         person.save()
+        logger.info(f"Acceso actualizado para {person}. has_access={person.has_access}")
+
+        student = getattr(person, "student", None)
+        logger.info(f"Student asociado: {student}")
+        plan_type = request.data.get("planType")
+        logger.info(f"PlanType recibido: {plan_type}")
+        if person.has_access and student and plan_type in [PlanChoices.MONTHLY, PlanChoices.ANNUAL]:
+            # Solo crear si no existe
+            if not hasattr(student, "subscription"):
+                Subscription.objects.create(
+                    student=student,
+                    plan=plan_type,
+                )
+                logger.info(f"Subscription creada para {student} con plan {plan_type}")
+            else:
+                logger.info(f"El student {student} ya tiene una suscripción")
+
         return Response(
             {"detail": "Acceso actualizado", "has_access": person.has_access},
             status=status.HTTP_200_OK,
