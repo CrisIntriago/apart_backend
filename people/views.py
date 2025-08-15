@@ -1,19 +1,21 @@
+from django.db import transaction
 from drf_spectacular.utils import OpenApiExample, extend_schema
 from rest_framework import status
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from content.models import Vocabulary
 from content.serializers import VocabularySerializer
-from people.models import Student
+from people.models import Person, Student
+from subscriptions.models import PlanChoices, Subscription
+from users.models import User
 
 from .serializers import (
     StudentDescriptionUpdateSerializer,
     StudentProfileSerializer,
     UpdateAccessSerializer,
 )
-from subscriptions.models import Subscription, PlanChoices
 
 
 class StudentProfileView(APIView):
@@ -64,54 +66,63 @@ class StudentProfileView(APIView):
 
 
 class UpdateAccessView(APIView):
-    #TO-DO Que solo pueda enviar eso el frontend con CROSS  origin para futuro.
-    permission_classes = []
+    permission_classes = [AllowAny]
 
     @extend_schema(
         summary="Actualizar acceso",
-        description="Actualiza el estado de acceso del usuario autenticado.",
+        description=(
+            "Actualiza el estado de acceso del usuario. "
+            "User y Person deben existir. "
+            "Solo crea Student si el plan es válido; asigna una descripción por defecto."  # noqa: E501
+        ),
         request=UpdateAccessSerializer,
-        responses={
-            200: "Acceso actualizado.",
-            400: "Solicitud inválida.",
-        },
+        responses={200: "Acceso actualizado.", 400: "Solicitud inválida."},
     )
+    @transaction.atomic
     def post(self, request):
-        import logging
-        logger = logging.getLogger("django")
-        logger.info(f"POST /api/people/update-access body: {request.data}")
-
         serializer = UpdateAccessSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        email = request.data.get("email")
-        logger.info(f"Email recibido: {email}")
-        if not email:
-            logger.warning("No se recibió email en la petición.")
-            return Response({"detail": "Email requerido."}, status=400)
-        from people.models import Person
-        person = Person.objects.filter(user__email=email).first()
-        logger.info(f"Persona encontrada: {person}")
-        if not person:
-            logger.warning(f"No hay perfil de persona asociado a {email}")
-            return Response({"detail": "No hay perfil de persona asociado a ese correo."}, status=400)
-        person.has_access = serializer.validated_data["hasAccess"]
-        person.save()
-        logger.info(f"Acceso actualizado para {person}. has_access={person.has_access}")
 
-        student = getattr(person, "student", None)
-        logger.info(f"Student asociado: {student}")
+        email = (request.data.get("email") or "").strip().lower()
+        if not email:
+            return Response(
+                {"detail": "Email requerido."}, status=status.HTTP_400_BAD_REQUEST
+            )
+
+        try:
+            user = User.objects.get(email=email)
+        except User.DoesNotExist:
+            return Response(
+                {"detail": "No existe un usuario con ese email."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        person = Person.objects.filter(user=user).first()
+        if not person:
+            return Response(
+                {"detail": "No hay perfil de persona asociado a ese usuario."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        person.has_access = serializer.validated_data["hasAccess"]
+        person.save(update_fields=["has_access"])
+
         plan_type = request.data.get("planType")
-        logger.info(f"PlanType recibido: {plan_type}")
-        if person.has_access and student and plan_type in [PlanChoices.MONTHLY, PlanChoices.ANNUAL]:
-            # Solo crear si no existe
-            if not hasattr(student, "subscription"):
-                Subscription.objects.create(
+        valid_plans = {choice.value for choice in PlanChoices}
+        plan_is_valid = plan_type in valid_plans
+
+        if plan_is_valid:
+            student, created_student = Student.objects.get_or_create(
+                person=person,
+                defaults={
+                    "description": "Estoy emocionado de comenzar mi aprendizaje en Apart y alcanzar mis metas."  # noqa: E501
+                },
+            )
+            if person.has_access:
+                Subscription.objects.get_or_create(
                     student=student,
-                    plan=plan_type,
+                    defaults={"plan": plan_type},
                 )
-                logger.info(f"Subscription creada para {student} con plan {plan_type}")
-            else:
-                logger.info(f"El student {student} ya tiene una suscripción")
 
         return Response(
             {"detail": "Acceso actualizado", "has_access": person.has_access},
