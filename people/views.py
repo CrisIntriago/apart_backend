@@ -6,11 +6,12 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from content.models import Vocabulary
-from content.serializers import VocabularySerializer
-from people.models import Person, Student
+from content.serializers import CourseProgressSerializer, VocabularySerializer
+from content.services import CourseProgressService
 from subscriptions.models import PlanChoices, Subscription
 from users.models import User
 
+from .models import Enrollment, EnrollmentStatus, Person, Student
 from .serializers import (
     StudentDescriptionUpdateSerializer,
     StudentProfileSerializer,
@@ -163,3 +164,43 @@ class MyVocabularyView(APIView):
         vocabularies = Vocabulary.objects.filter(student_id=student_id).order_by("word")
         serializer = VocabularySerializer(vocabularies, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+class MyCoursesProgressView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    @extend_schema(
+        tags=["Courses"],
+        summary="Avance de todos mis cursos (usuario autenticado)",
+        description=(
+            "Devuelve el porcentaje de avance de todos los cursos del usuario autenticado, "  # noqa: E501
+            "contando actividades con al menos una respuesta. Incluye desglose por módulo "  # noqa: E501
+            "y un campo `is_active` que indica si es el curso activo."
+        ),
+        responses={200: CourseProgressSerializer(many=True)},
+    )
+    def get(self, request):
+        user = request.user
+
+        enrollments = Enrollment.objects.select_related("course").filter(
+            student__person__user_id=user.id
+        )
+
+        active_course_id = None
+        active_enrollment = enrollments.filter(status=EnrollmentStatus.ACTIVE).first()
+        if active_enrollment:
+            active_course_id = active_enrollment.course_id
+
+        results = []
+        for e in enrollments:
+            result = CourseProgressService(course=e.course, user=user).compute()
+            serializer = CourseProgressSerializer({
+                "course": {"id": e.course.id, "name": e.course.name},
+                "overall": result.overall,
+                "modules": result.modules,
+                "is_active": e.course_id == active_course_id,
+            })
+            results.append(serializer.data)
+        results = sorted(results, key=lambda x: not x["is_active"])
+
+        return Response(results)

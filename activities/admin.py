@@ -163,7 +163,19 @@ class FillInTheBlankActivityAdmin(
     ordering = ("-created_at",)
 
     fieldsets = (
-        (None, {"fields": ("title", "instructions", "difficulty", "points", "module")}),
+        (
+            None,
+            {
+                "fields": (
+                    "title",
+                    "instructions",
+                    "feedback",
+                    "difficulty",
+                    "points",
+                    "module",
+                )
+            },
+        ),
         ("Contenido", {"fields": ("authoring_text",)}),
         ("Vista previa", {"fields": ("preview_text",)}),
     )

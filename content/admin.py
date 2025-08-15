@@ -1,5 +1,6 @@
 from django.contrib import admin
 from django.urls import reverse
+from django.utils.html import format_html, format_html_join
 from django.utils.safestring import mark_safe
 from unfold.admin import ModelAdmin, TabularInline
 
@@ -45,6 +46,9 @@ class WordOrderingActivityInline(ReadonlyActivityInlineBase):
 
 @admin.register(Module)
 class ModuleAdmin(ModelAdmin):
+    class Media:
+        css = {"all": ("admin/custom/buttons.css",)}
+
     list_display = ("name", "course", "end_date", "activities_count")
     fields = (
         "course",
@@ -71,6 +75,7 @@ class ModuleAdmin(ModelAdmin):
     def add_activities(self, obj):
         if not obj or not obj.pk:
             return "Guarda el módulo para ver opciones de creación."
+
         links = [
             (
                 "+ Opción múltiple",
@@ -91,12 +96,16 @@ class ModuleAdmin(ModelAdmin):
                 + f"?module={obj.pk}",
             ),
         ]
-        html = "<br>".join(
-            f'<a class="button" href="{url}">{label}</a>' for label, url in links
-        )
-        return mark_safe(html)
 
-    add_activities.short_description = "Crear nuevas actividades (en otra página)"
+        buttons = format_html_join(
+            "",
+            '<a href="{}" class="apart-btn apart-btn--primary">{}</a>',
+            ((url, label) for label, url in links),
+        )
+
+        return format_html(buttons)
+
+    add_activities.short_description = "Crear nuevas actividades"
 
 
 class ModuleInline(TabularInline):
@@ -165,6 +174,9 @@ class ExamActivityInline(TabularInline):
 
 @admin.register(Exam)
 class ExamAdmin(ModelAdmin):
+    class Media:
+        css = {"all": ("admin/custom/buttons.css",)}
+
     list_display = ("__str__", "course", "type", "is_published", "items_count")
     fields = (
         "course",
@@ -214,9 +226,11 @@ class ExamAdmin(ModelAdmin):
                 + f"?exam={obj.pk}",
             ),
         ]
-        html = "<br>".join(
-            f'<a class="button" href="{url}">{label}</a>' for label, url in links
+        buttons = format_html_join(
+            "",
+            '<a href="{}" class="apart-btn apart-btn--primary">{}</a>',
+            ((url, label) for label, url in links),
         )
-        return mark_safe(html)
+        return format_html(buttons)
 
     add_activities.short_description = "Crear y asociar actividades"
