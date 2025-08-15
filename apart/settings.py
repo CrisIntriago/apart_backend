@@ -46,6 +46,7 @@ CSRF_TRUSTED_ORIGINS = [
     "https://apartbackend-production.up.railway.app",
     "https://www.study-apart.com",
     "https://apart-frontend-application.vercel.app",
+    "https://apart-app"
 ]
 
 if DEBUG:
