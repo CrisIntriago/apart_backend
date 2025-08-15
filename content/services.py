@@ -12,6 +12,7 @@ from django.utils import timezone
 from activities.models.base import Activity, UserAnswer
 from content.models import Course, Module
 from users.models import User
+from utils.enums import CONSUME_STATUSES
 
 from .exceptions import NoAttemptsRemainingError
 from .models import Exam, ExamAttempt, ExamAttemptStatus
@@ -210,11 +211,7 @@ class ExamAttemptService:
         return ExamAttempt.objects.filter(
             exam=exam,
             user=user,
-            status__in=[
-                ExamAttemptStatus.GRADED,
-                ExamAttemptStatus.EXPIRED,
-                ExamAttemptStatus.CANCELLED,
-            ],
+            status__in=CONSUME_STATUSES,
         ).count()
 
     @classmethod

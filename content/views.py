@@ -17,6 +17,7 @@ from activities.models.base import ExamActivity
 from activities.serializers import ActivitySerializer, ExamActivityItemSerializer
 from activities.services import AnswerSubmissionService
 from people.serializers import StudentProfileSerializer
+from utils.enums import CONSUME_STATUSES
 
 from .exceptions import NoAttemptsRemainingError
 from .models import Course, Exam, ExamAttempt, ExamAttemptStatus
@@ -159,13 +160,6 @@ class CourseExamsView(APIView):
             .order_by("-percentage", "-graded_at")
         )
 
-        USED_STATUSES = [
-            ExamAttemptStatus.IN_PROGRESS,
-            ExamAttemptStatus.SUBMITTED,
-            ExamAttemptStatus.GRADED,
-            ExamAttemptStatus.EXPIRED,
-        ]
-
         exams = (
             course.exams.filter(is_published=True)
             .annotate(
@@ -173,10 +167,18 @@ class CourseExamsView(APIView):
                     "attempts",
                     filter=Q(
                         attempts__user_id=request.user.id,
-                        attempts__status__in=USED_STATUSES,
+                        attempts__status__in=CONSUME_STATUSES,
                     ),
                     distinct=True,
-                )
+                ),
+                user_in_progress_count=Count(
+                    "attempts",
+                    filter=Q(
+                        attempts__user_id=request.user.id,
+                        attempts__status=ExamAttemptStatus.IN_PROGRESS,
+                    ),
+                    distinct=True,
+                ),
             )
             .prefetch_related(
                 Prefetch(

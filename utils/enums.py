@@ -51,3 +51,10 @@ class EnrollmentStatus(models.TextChoices):
     PAUSED = "PAUSED", "Paused"
     CANCELED = "CANCELED", "Canceled"
     COMPLETED = "COMPLETED", "Completed"
+
+
+CONSUME_STATUSES = {
+    ExamAttemptStatus.SUBMITTED,
+    ExamAttemptStatus.GRADED,
+    ExamAttemptStatus.EXPIRED,
+}
