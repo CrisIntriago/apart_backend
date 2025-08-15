@@ -169,14 +169,16 @@ class CourseProgressService:
 
 class ExamAttemptService:
     @staticmethod
-    def create_attempt(*, exam: Exam, user, attempt_number: int) -> ExamAttempt:
-        return ExamAttempt.objects.create(
-            exam=exam,
-            user=user,
-            attempt_number=attempt_number,
-            time_limit_minutes=exam.time_limit_minutes,
-            status=ExamAttemptStatus.IN_PROGRESS,
-            started_at=timezone.now(),
+    def lock_exam(exam_id: int) -> Exam:
+        return Exam.objects.select_for_update().get(pk=exam_id)
+
+    @staticmethod
+    def get_last_attempt_locked(*, exam: Exam, user) -> Optional[ExamAttempt]:
+        return (
+            ExamAttempt.objects.select_for_update()
+            .filter(exam=exam, user=user)
+            .order_by("-attempt_number", "-id")
+            .first()
         )
 
     @staticmethod
@@ -201,12 +203,8 @@ class ExamAttemptService:
             return False
 
         updated = ExamAttempt.objects.filter(
-            pk=attempt.pk,
-            status=ExamAttemptStatus.IN_PROGRESS,
-        ).update(
-            status=ExamAttemptStatus.EXPIRED,
-            finished_at=expires_at,
-        )
+            pk=attempt.pk, status=ExamAttemptStatus.IN_PROGRESS
+        ).update(status=ExamAttemptStatus.EXPIRED, finished_at=expires_at)
 
         if updated:
             attempt.status = ExamAttemptStatus.EXPIRED
@@ -223,6 +221,34 @@ class ExamAttemptService:
         ).count()
 
     @classmethod
+    def ensure_attempts_remaining(cls, *, exam: Exam, user) -> None:
+        if exam.attempts_allowed:
+            used = cls.count_used_attempts(exam=exam, user=user)
+            if used >= exam.attempts_allowed:
+                raise NoAttemptsRemainingError("No attempts remaining.")
+
+    @staticmethod
+    def next_attempt_number(*, exam: Exam, user) -> int:
+        last_num = (
+            ExamAttempt.objects.filter(exam=exam, user=user)
+            .aggregate(m=Max("attempt_number"))
+            .get("m")
+            or 0
+        )
+        return last_num + 1
+
+    @staticmethod
+    def create_attempt(*, exam: Exam, user, attempt_number: int) -> ExamAttempt:
+        return ExamAttempt.objects.create(
+            exam=exam,
+            user=user,
+            attempt_number=attempt_number,
+            time_limit_minutes=exam.time_limit_minutes,
+            status=ExamAttemptStatus.IN_PROGRESS,
+            started_at=timezone.now(),
+        )
+
+    @classmethod
     @transaction.atomic
     def start_attempt(cls, *, exam_id: int, user) -> StartAttemptResult:
         exam = cls.lock_exam(exam_id)
@@ -234,6 +260,7 @@ class ExamAttemptService:
                 return StartAttemptResult(attempt=last, created=False)
 
         cls.ensure_attempts_remaining(exam=exam, user=user)
+
         num = cls.next_attempt_number(exam=exam, user=user)
         attempt = cls.create_attempt(exam=exam, user=user, attempt_number=num)
         return StartAttemptResult(attempt=attempt, created=True)
