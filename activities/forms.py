@@ -24,6 +24,7 @@ class FillInTheBlankActivityForm(forms.ModelForm):
             "title",
             "instructions",
             "difficulty",
+            "feedback",
             "points",
             "module",
             "authoring_text",
@@ -75,7 +76,6 @@ class FillInTheBlankActivityForm(forms.ModelForm):
         return cleaned
 
     def save(self, commit=True):
-        # MUY IMPORTANTE: copiar campos calculados al modelo
         instance = super().save(commit=False)
         instance.text = self.cleaned_data["text"]
         instance.correct_answers = self.cleaned_data["correct_answers"]
