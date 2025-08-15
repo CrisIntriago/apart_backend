@@ -106,9 +106,11 @@ class RegisterView(APIView):
             status=status.HTTP_201_CREATED,
         )
 
+
 @method_decorator(csrf_exempt, name="dispatch")
 class LoginView(APIView):
     permission_classes = [AllowAny]
+    authentication_classes = []
 
     @extend_schema(
         request={
