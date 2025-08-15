@@ -213,3 +213,4 @@ class CourseProgressSerializer(serializers.Serializer):
     course = serializers.DictField()
     overall = OverallProgressSerializer()
     modules = ModuleProgressSerializer(many=True)
+    is_active = serializers.BooleanField(required=False)
