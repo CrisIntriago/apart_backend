@@ -30,9 +30,11 @@ class AnswerSubmissionService:
             activity, serializer.validated_data, is_correct
         )
         transaction.on_commit(lambda: self._create_vocabulary_if_applicable(activity))
-        transaction.on_commit(
-            lambda: self._update_enrollment_progress(activity.module.course)
-        )
+        module = activity.module
+        if module:
+            transaction.on_commit(
+                lambda: self._update_enrollment_progress(module.course)
+            )
         return user_answer
 
     def _get_activity(self):
