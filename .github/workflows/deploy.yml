@@ -28,4 +28,6 @@ jobs:
       - name: Run tests with uv
         run: |
           uv sync
+          uv run manage.py makemigrations --noinput
+          uv run manage.py migrate --noinput
           uv run manage.py test
