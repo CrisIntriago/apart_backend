@@ -53,22 +53,25 @@ class ExamSerializer(serializers.ModelSerializer):
             "user_passed",
         )
 
+    def _allowed(self, obj) -> int | None:
+        return obj.attempts_allowed
+
+    def _used(self, obj) -> int:
+        return getattr(obj, "user_used_attempts_count", 0) or 0
+
     def _user_attempts(self, obj):
         return getattr(obj, "user_graded_attempts", None)
 
     def get_remaining_attempts(self, obj):
-        allowed = obj.attempts_allowed
+        allowed = self._allowed(obj)
         if allowed is None:
             return None
-        used = getattr(obj, "user_used_attempts_count", 0) or 0
-        remaining = max(allowed - used, 0)
-        return remaining
+        used = self._used(obj)
+        return max(allowed - used, 0)
 
     def get_has_attempts_left(self, obj):
         remaining = self.get_remaining_attempts(obj)
-        if remaining is None:
-            return True
-        return remaining > 0
+        return True if remaining is None else remaining > 0
 
     def get_user_last_attempt_at(self, obj):
         attempts = self._user_attempts(obj)
