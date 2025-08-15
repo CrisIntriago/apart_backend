@@ -32,7 +32,7 @@ class UpdateAccessViewTestCase(TestCase):
         data = {"hasAccess": True, "email": "notfound@example.com", "planType": PlanChoices.MONTHLY}
         response = self.client.post(self.url, data, format='json')
         self.assertEqual(response.status_code, 400)
-        self.assertIn('No hay perfil de persona asociado', response.json()['detail'])
+        self.assertIn('No existe un usuario con ese email.', response.json()['detail'])
 
     def test_update_access_and_create_subscription(self):
         data = {"hasAccess": True, "email": self.user.email, "planType": PlanChoices.MONTHLY}

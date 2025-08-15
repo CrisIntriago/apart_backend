@@ -14,6 +14,11 @@ class AuthTestCase(TestCase):
             "email": "test@example.com",
             "phone": "0999999999",
             "password": "securepassword",
+            "first_name": "Test",
+            "last_name": "User",
+            "country": "Ecuador",
+            "date_of_birth": "2000-01-01",
+            "languages": ["es", "en"],
         }
 
     def test_register_user(self):
@@ -21,15 +26,26 @@ class AuthTestCase(TestCase):
         self.assertEqual(response.status_code, 201)
 
     def test_login_user(self):
-        User.objects.create_user(
+        user = User.objects.create_user(
             username=self.user_data["username"],
             email=self.user_data["email"],
             phone=self.user_data["phone"],
             password=self.user_data["password"],
+            first_name=self.user_data["first_name"],
+            last_name=self.user_data["last_name"],
+        )
+        from people.models import Person
+        Person.objects.create(
+            user=user,
+            first_name=self.user_data["first_name"],
+            last_name=self.user_data["last_name"],
+            date_of_birth=self.user_data["date_of_birth"],
+            country=self.user_data["country"],
+            languages=self.user_data["languages"],
         )
 
         login_payload = {
-            "username": self.user_data["username"],
+            "email": self.user_data["email"],
             "password": self.user_data["password"],
         }
 
