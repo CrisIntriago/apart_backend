@@ -73,7 +73,7 @@ class StudentProfileSerializer(ProfileSerializer):
 class UpdateAccessSerializer(serializers.Serializer):
     hasAccess = serializers.BooleanField()
     email = serializers.EmailField()
-    plan = serializers.CharField()
+    planType = serializers.CharField()
 
 
 class StudentDescriptionUpdateSerializer(serializers.Serializer):
