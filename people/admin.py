@@ -216,3 +216,6 @@ class EnrollmentAdmin(ModelAdmin):
             color,
             obj.get_status_display(),
         )
+
+    def has_add_permission(self, request):
+        return False
