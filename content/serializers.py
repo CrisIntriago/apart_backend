@@ -28,6 +28,12 @@ class CourseSerializer(serializers.ModelSerializer):
 
 
 class ExamSerializer(serializers.ModelSerializer):
+    has_attempts_left = serializers.SerializerMethodField()
+    remaining_attempts = serializers.SerializerMethodField()
+    user_last_attempt_at = serializers.SerializerMethodField()
+    user_percentage = serializers.SerializerMethodField()
+    user_passed = serializers.SerializerMethodField()
+
     class Meta:
         model = Exam
         fields = (
@@ -40,7 +46,51 @@ class ExamSerializer(serializers.ModelSerializer):
             "time_limit_minutes",
             "attempts_allowed",
             "pass_mark_percent",
+            "has_attempts_left",
+            "remaining_attempts",
+            "user_last_attempt_at",
+            "user_percentage",
+            "user_passed",
         )
+
+    def _allowed(self, obj) -> int | None:
+        return obj.attempts_allowed
+
+    def _used(self, obj) -> int:
+        return getattr(obj, "user_used_attempts_count", 0) or 0
+
+    def _user_attempts(self, obj):
+        return getattr(obj, "user_graded_attempts", None)
+
+    def get_remaining_attempts(self, obj):
+        allowed = self._allowed(obj)
+        if allowed is None:
+            return None
+        used = self._used(obj)
+        return max(allowed - used, 0)
+
+    def get_has_attempts_left(self, obj):
+        remaining = self.get_remaining_attempts(obj)
+        return True if remaining is None else remaining > 0
+
+    def get_user_last_attempt_at(self, obj):
+        attempts = self._user_attempts(obj)
+        if not attempts:
+            return None
+        last = max(attempts, key=lambda a: (a.graded_at or a.finished_at))
+        dt = last.graded_at or last.finished_at
+        return dt.isoformat().replace("+00:00", "Z") if dt else None
+
+    def get_user_percentage(self, obj):
+        attempts = self._user_attempts(obj)
+        if not attempts:
+            return None
+        best = attempts[0]
+        return f"{best.percentage:.2f}" if best.percentage is not None else None
+
+    def get_user_passed(self, obj):
+        attempts = self._user_attempts(obj)
+        return any(a.passed for a in (attempts or []))
 
 
 class AnswerInputItemSerializer(serializers.Serializer):

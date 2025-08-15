@@ -8,11 +8,15 @@ class MatchingActivity(Activity):
 
     class Meta:
         db_table = "matching_activity"
+        verbose_name = "Matching Activity"
+        verbose_name_plural = "Matching Activities"
 
 
 class MatchingPair(models.Model):
     class Meta:
         db_table = "matching_pair"
+        verbose_name = "Matching Pair"
+        verbose_name_plural = "Matching Pairs"
 
     activity = models.ForeignKey(
         MatchingActivity,

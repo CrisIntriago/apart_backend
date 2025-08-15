@@ -1,3 +1,4 @@
+from django.db.models import Count, Prefetch, Q
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
 from drf_spectacular.utils import (
@@ -16,6 +17,7 @@ from activities.models.base import ExamActivity
 from activities.serializers import ActivitySerializer, ExamActivityItemSerializer
 from activities.services import AnswerSubmissionService
 from people.serializers import StudentProfileSerializer
+from utils.enums import CONSUME_STATUSES
 
 from .exceptions import NoAttemptsRemainingError
 from .models import Course, Exam, ExamAttempt, ExamAttemptStatus
@@ -117,6 +119,8 @@ class CourseStudentsView(APIView):
 
 
 class CourseExamsView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
     @extend_schema(
         tags=["Exams"],
         summary="Obtener los exámenes publicados de un curso",
@@ -132,8 +136,13 @@ class CourseExamsView(APIView):
                     "description": "Upa",
                     "is_published": True,
                     "time_limit_minutes": 30,
-                    "attempts_allowed": 1,
+                    "attempts_allowed": 3,
                     "pass_mark_percent": 60,
+                    "has_attempts_left": True,
+                    "remaining_attempts": 2,
+                    "user_last_attempt_at": "2025-08-10T15:32:21Z",
+                    "user_percentage": "82.50",
+                    "user_passed": True,
                 },
                 response_only=True,
             )
@@ -141,7 +150,45 @@ class CourseExamsView(APIView):
     )
     def get(self, request, pk):
         course = get_object_or_404(Course, pk=pk)
-        exams = course.exams.filter(is_published=True)
+
+        graded_or_expired_qs = (
+            ExamAttempt.objects.filter(
+                user_id=request.user.id,
+                status__in=[ExamAttemptStatus.GRADED, ExamAttemptStatus.EXPIRED],
+            )
+            .only("exam_id", "percentage", "passed", "graded_at", "finished_at")
+            .order_by("-percentage", "-graded_at")
+        )
+
+        exams = (
+            course.exams.filter(is_published=True)
+            .annotate(
+                user_used_attempts_count=Count(
+                    "attempts",
+                    filter=Q(
+                        attempts__user_id=request.user.id,
+                        attempts__status__in=CONSUME_STATUSES,
+                    ),
+                    distinct=True,
+                ),
+                user_in_progress_count=Count(
+                    "attempts",
+                    filter=Q(
+                        attempts__user_id=request.user.id,
+                        attempts__status=ExamAttemptStatus.IN_PROGRESS,
+                    ),
+                    distinct=True,
+                ),
+            )
+            .prefetch_related(
+                Prefetch(
+                    "attempts",
+                    queryset=graded_or_expired_qs,
+                    to_attr="user_graded_attempts",
+                )
+            )
+        )
+
         serializer = ExamSerializer(exams, many=True, context={"request": request})
         return Response(serializer.data)
 

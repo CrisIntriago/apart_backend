@@ -6,6 +6,8 @@ from .base import Activity
 class ChoiceActivity(Activity):
     class Meta:
         db_table = "choice_activity"
+        verbose_name = "Choice Activity"
+        verbose_name_plural = "Choice Activities"
 
     is_multiple = models.BooleanField(
         default=False,
@@ -16,6 +18,8 @@ class ChoiceActivity(Activity):
 class Choice(models.Model):
     class Meta:
         db_table = "choice"
+        verbose_name = "Choice"
+        verbose_name_plural = "Choices"
 
     activity = models.ForeignKey(
         ChoiceActivity,

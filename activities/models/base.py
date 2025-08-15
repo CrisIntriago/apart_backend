@@ -9,6 +9,8 @@ class Activity(models.Model):
     class Meta:
         db_table = "activity"
         abstract = False
+        verbose_name = "Activity"
+        verbose_name_plural = "Activities"
 
     title = models.CharField(max_length=255)
     instructions = models.TextField(blank=True)
@@ -44,6 +46,8 @@ class Activity(models.Model):
 class ExamActivity(models.Model):
     class Meta:
         db_table = "exam_activity"
+        verbose_name = "Exam Activity"
+        verbose_name_plural = "Exam Activities"
         unique_together = ("exam", "activity")
         ordering = ("position", "id")
 
@@ -61,6 +65,8 @@ class ExamActivity(models.Model):
 class UserAnswer(models.Model):
     class Meta:
         db_table = "user_answer"
+        verbose_name = "User Answer"
+        verbose_name_plural = "User Answers"
         indexes = [
             models.Index(fields=["user", "activity", "is_correct"]),
             models.Index(fields=["exam_attempt", "activity"]),
