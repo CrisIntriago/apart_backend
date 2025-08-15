@@ -206,11 +206,11 @@ class ExamAttemptService:
             pk=attempt.pk, status=ExamAttemptStatus.IN_PROGRESS
         ).update(status=ExamAttemptStatus.EXPIRED, finished_at=expires_at)
 
-        if updated:
-            attempt.status = ExamAttemptStatus.EXPIRED
-            attempt.finished_at = expires_at
-            return True
-        return False
+        if not updated:
+            return False
+
+        attempt.refresh_from_db(fields=("status", "finished_at"))
+        return True
 
     @staticmethod
     def count_used_attempts(*, exam: Exam, user) -> int:
@@ -249,18 +249,30 @@ class ExamAttemptService:
         )
 
     @classmethod
-    @transaction.atomic
+    def _expire_last_attempt_if_needed(
+        cls, *, exam_id: int, user
+    ) -> Optional[ExamAttempt]:
+        with transaction.atomic():
+            exam = cls.lock_exam(exam_id)
+            last = cls.get_last_attempt_locked(exam=exam, user=user)
+            if last and last.status == ExamAttemptStatus.IN_PROGRESS:
+                cls.mark_expired_if_needed(attempt=last, exam=exam)
+            return last
+
+    @classmethod
+    def _create_attempt_strict(cls, *, exam_id: int, user) -> StartAttemptResult:
+        with transaction.atomic():
+            exam = cls.lock_exam(exam_id)
+            cls.ensure_attempts_remaining(exam=exam, user=user)
+            num = cls.next_attempt_number(exam=exam, user=user)
+            attempt = cls.create_attempt(exam=exam, user=user, attempt_number=num)
+            return StartAttemptResult(attempt=attempt, created=True)
+
+    @classmethod
     def start_attempt(cls, *, exam_id: int, user) -> StartAttemptResult:
-        exam = cls.lock_exam(exam_id)
-        last = cls.get_last_attempt_locked(exam=exam, user=user)
+        last = cls._expire_last_attempt_if_needed(exam_id=exam_id, user=user)
 
         if last and last.status == ExamAttemptStatus.IN_PROGRESS:
-            expired_now = cls.mark_expired_if_needed(attempt=last, exam=exam)
-            if not expired_now:
-                return StartAttemptResult(attempt=last, created=False)
+            return StartAttemptResult(attempt=last, created=False)
 
-        cls.ensure_attempts_remaining(exam=exam, user=user)
-
-        num = cls.next_attempt_number(exam=exam, user=user)
-        attempt = cls.create_attempt(exam=exam, user=user, attempt_number=num)
-        return StartAttemptResult(attempt=attempt, created=True)
+        return cls._create_attempt_strict(exam_id=exam_id, user=user)
