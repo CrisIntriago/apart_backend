@@ -169,16 +169,14 @@ class CourseProgressService:
 
 class ExamAttemptService:
     @staticmethod
-    def lock_exam(exam_id: int) -> Exam:
-        return Exam.objects.select_for_update().get(pk=exam_id)
-
-    @staticmethod
-    def get_last_attempt_locked(*, exam: Exam, user) -> Optional[ExamAttempt]:
-        return (
-            ExamAttempt.objects.select_for_update()
-            .filter(exam=exam, user=user)
-            .order_by("-attempt_number")
-            .first()
+    def create_attempt(*, exam: Exam, user, attempt_number: int) -> ExamAttempt:
+        return ExamAttempt.objects.create(
+            exam=exam,
+            user=user,
+            attempt_number=attempt_number,
+            time_limit_minutes=exam.time_limit_minutes,
+            status=ExamAttemptStatus.IN_PROGRESS,
+            started_at=timezone.now(),
         )
 
     @staticmethod
@@ -186,10 +184,9 @@ class ExamAttemptService:
         *, attempt: ExamAttempt, exam: Exam
     ) -> Optional[timezone.datetime]:
         limit = attempt.time_limit_minutes or exam.time_limit_minutes or 0
-        if not limit:
+        if not limit or not attempt.started_at:
             return None
-        started = attempt.started_at or timezone.now()
-        return started + timedelta(minutes=limit)
+        return attempt.started_at + timedelta(minutes=limit)
 
     @classmethod
     def mark_expired_if_needed(
@@ -200,9 +197,20 @@ class ExamAttemptService:
 
         now = now or timezone.now()
         expires_at = cls.compute_expires_at(attempt=attempt, exam=exam)
-        if expires_at and now >= expires_at:
+        if not expires_at or now < expires_at:
+            return False
+
+        updated = ExamAttempt.objects.filter(
+            pk=attempt.pk,
+            status=ExamAttemptStatus.IN_PROGRESS,
+        ).update(
+            status=ExamAttemptStatus.EXPIRED,
+            finished_at=expires_at,
+        )
+
+        if updated:
             attempt.status = ExamAttemptStatus.EXPIRED
-            attempt.save(update_fields=["status"])
+            attempt.finished_at = expires_at
             return True
         return False
 
@@ -213,33 +221,6 @@ class ExamAttemptService:
             user=user,
             status__in=CONSUME_STATUSES,
         ).count()
-
-    @classmethod
-    def ensure_attempts_remaining(cls, *, exam: Exam, user) -> None:
-        if exam.attempts_allowed:
-            used = cls.count_used_attempts(exam=exam, user=user)
-            if used >= exam.attempts_allowed:
-                raise NoAttemptsRemainingError("No attempts remaining.")
-
-    @staticmethod
-    def next_attempt_number(*, exam: Exam, user) -> int:
-        last_num = (
-            ExamAttempt.objects.filter(exam=exam, user=user)
-            .aggregate(m=Max("attempt_number"))
-            .get("m")
-            or 0
-        )
-        return last_num + 1
-
-    @staticmethod
-    def create_attempt(*, exam: Exam, user, attempt_number: int) -> ExamAttempt:
-        return ExamAttempt.objects.create(
-            exam=exam,
-            user=user,
-            attempt_number=attempt_number,
-            time_limit_minutes=exam.time_limit_minutes,
-            status=ExamAttemptStatus.IN_PROGRESS,
-        )
 
     @classmethod
     @transaction.atomic
@@ -253,7 +234,6 @@ class ExamAttemptService:
                 return StartAttemptResult(attempt=last, created=False)
 
         cls.ensure_attempts_remaining(exam=exam, user=user)
-
         num = cls.next_attempt_number(exam=exam, user=user)
         attempt = cls.create_attempt(exam=exam, user=user, attempt_number=num)
         return StartAttemptResult(attempt=attempt, created=True)
