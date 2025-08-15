@@ -26,7 +26,7 @@ class StudentProfileView(APIView):
         description="Devuelve el perfil del estudiante asociado al usuario autenticado.",  # noqa: E501
         responses={
             200: StudentProfileSerializer,
-            400: "No hay perfil de estudiante asociado.",
+            400: "No hay perfil de personas asociado.",
         },
     )
     def get(self, request):
@@ -36,13 +36,6 @@ class StudentProfileView(APIView):
                 {"detail": "No hay perfil de persona asociado."},
                 status=400,
             )
-        student = getattr(person, "student", None)
-        if not student:
-            return Response(
-                {"detail": "No hay perfil de estudiante asociado."},
-                status=400,
-            )
-
         serializer = StudentProfileSerializer(person, context={"request": request})
         return Response(serializer.data)
 
