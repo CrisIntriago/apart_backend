@@ -23,10 +23,11 @@ class Person(models.Model):
     first_name = models.CharField(max_length=100, default="")
     last_name = models.CharField(max_length=100, default="")
     date_of_birth = models.DateField(default=None)
-    photo = models.ImageField(
-        upload_to="people/photos/",
+    photo = models.CharField(
+        max_length=500,
         null=True,
         blank=True,
+        help_text="URL o ruta de la foto de perfil."
     )
     country = models.CharField(max_length=100, default="")
     languages = models.JSONField(default=list)
