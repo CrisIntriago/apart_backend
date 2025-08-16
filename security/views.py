@@ -62,8 +62,6 @@ class RegisterView(APIView):
                 url = f"https://oauth2.googleapis.com/tokeninfo?id_token={google_token}"
                 response = requests.get(url)
                 google_data = response.json()
-                print("CRISTIAN")
-                print(google_data)
 
                 if response.status_code != 200 or "email" not in google_data:
                     return Response(
@@ -93,8 +91,6 @@ class RegisterView(APIView):
         user = register_user(serializer.validated_data)
         token = register_token(user)
         photo = user.person.photo if user.person.photo else None
-        print(user)
-        print(photo)
         return Response(
             {
                 "user": {
