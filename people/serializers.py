@@ -38,7 +38,6 @@ class StudentProfileSerializer(ProfileSerializer):
     description = serializers.SerializerMethodField()
     languages = serializers.SerializerMethodField()
     course = serializers.SerializerMethodField()
-    has_access = serializers.SerializerMethodField()
 
     class Meta(ProfileSerializer.Meta):
         model = Person
@@ -65,9 +64,6 @@ class StudentProfileSerializer(ProfileSerializer):
         if student and student.active_course:
             return CourseSerializer(student.active_course).data
         return None
-
-    def get_has_access(self, obj):
-        return getattr(getattr(obj, "student", None), "has_access", False)
 
 
 class UpdateAccessSerializer(serializers.Serializer):
