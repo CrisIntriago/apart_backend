@@ -41,7 +41,6 @@ ALLOWED_HOSTS = [
     "127.0.0.1",
 ]
 
-# Permitir solicitudes CSRF desde dominios confiables
 CSRF_TRUSTED_ORIGINS = [
     "https://apartbackend-production.up.railway.app",
     "https://www.study-apart.com",
