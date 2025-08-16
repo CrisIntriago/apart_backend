@@ -6,7 +6,9 @@ from django.contrib.auth import get_user_model, login
 from django.db.models import Q
 from django.shortcuts import redirect, render
 from django.utils import timezone
+from django.utils.decorators import method_decorator
 from django.views import View
+from django.views.decorators.csrf import csrf_exempt
 from django.views.generic import TemplateView
 from drf_spectacular.utils import (
     OpenApiExample,
@@ -105,8 +107,10 @@ class RegisterView(APIView):
         )
 
 
+@method_decorator(csrf_exempt, name="dispatch")
 class LoginView(APIView):
     permission_classes = [AllowAny]
+    authentication_classes = []
 
     @extend_schema(
         request={

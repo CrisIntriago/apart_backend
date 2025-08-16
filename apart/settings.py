@@ -45,6 +45,7 @@ CSRF_TRUSTED_ORIGINS = [
     "https://apartbackend-production.up.railway.app",
     "https://www.study-apart.com",
     "https://apart-frontend-application.vercel.app",
+    "https://apart-app",
 ]
 
 if DEBUG:
@@ -255,9 +256,10 @@ STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
 
 CORS_ALLOWED_ORIGINS = [
     "https://apart-frontend-application.vercel.app",
-    "http://localhost:3000",
-    "http://localhost:8101",
     "https://www.study-apart.com",
+    "http://localhost:3000",
+    "https://apart-app",
+    "capacitor://apart-app",
 ]
 
 UNFOLD = {
