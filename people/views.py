@@ -1,19 +1,22 @@
+from django.db import transaction
 from drf_spectacular.utils import OpenApiExample, extend_schema
 from rest_framework import status
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from content.models import Vocabulary
-from content.serializers import VocabularySerializer
-from people.models import Student
+from content.serializers import CourseProgressSerializer, VocabularySerializer
+from content.services import CourseProgressService
+from subscriptions.models import PlanChoices, Subscription
+from users.models import User
 
+from .models import Enrollment, EnrollmentStatus, Person, Student
 from .serializers import (
     StudentDescriptionUpdateSerializer,
     StudentProfileSerializer,
     UpdateAccessSerializer,
 )
-from subscriptions.models import Subscription, PlanChoices
 
 
 class StudentProfileView(APIView):
@@ -24,7 +27,7 @@ class StudentProfileView(APIView):
         description="Devuelve el perfil del estudiante asociado al usuario autenticado.",  # noqa: E501
         responses={
             200: StudentProfileSerializer,
-            400: "No hay perfil de estudiante asociado.",
+            400: "No hay perfil de personas asociado.",
         },
     )
     def get(self, request):
@@ -34,13 +37,6 @@ class StudentProfileView(APIView):
                 {"detail": "No hay perfil de persona asociado."},
                 status=400,
             )
-        student = getattr(person, "student", None)
-        if not student:
-            return Response(
-                {"detail": "No hay perfil de estudiante asociado."},
-                status=400,
-            )
-
         serializer = StudentProfileSerializer(person, context={"request": request})
         return Response(serializer.data)
 
@@ -64,54 +60,63 @@ class StudentProfileView(APIView):
 
 
 class UpdateAccessView(APIView):
-    #TO-DO Que solo pueda enviar eso el frontend con CROSS  origin para futuro.
-    permission_classes = []
+    permission_classes = [AllowAny]
 
     @extend_schema(
         summary="Actualizar acceso",
-        description="Actualiza el estado de acceso del usuario autenticado.",
+        description=(
+            "Actualiza el estado de acceso del usuario. "
+            "User y Person deben existir. "
+            "Solo crea Student si el plan es válido; asigna una descripción por defecto."  # noqa: E501
+        ),
         request=UpdateAccessSerializer,
-        responses={
-            200: "Acceso actualizado.",
-            400: "Solicitud inválida.",
-        },
+        responses={200: "Acceso actualizado.", 400: "Solicitud inválida."},
     )
+    @transaction.atomic
     def post(self, request):
-        import logging
-        logger = logging.getLogger("django")
-        logger.info(f"POST /api/people/update-access body: {request.data}")
-
         serializer = UpdateAccessSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        email = request.data.get("email")
-        logger.info(f"Email recibido: {email}")
-        if not email:
-            logger.warning("No se recibió email en la petición.")
-            return Response({"detail": "Email requerido."}, status=400)
-        from people.models import Person
-        person = Person.objects.filter(user__email=email).first()
-        logger.info(f"Persona encontrada: {person}")
-        if not person:
-            logger.warning(f"No hay perfil de persona asociado a {email}")
-            return Response({"detail": "No hay perfil de persona asociado a ese correo."}, status=400)
-        person.has_access = serializer.validated_data["hasAccess"]
-        person.save()
-        logger.info(f"Acceso actualizado para {person}. has_access={person.has_access}")
 
-        student = getattr(person, "student", None)
-        logger.info(f"Student asociado: {student}")
+        email = (request.data.get("email") or "").strip().lower()
+        if not email:
+            return Response(
+                {"detail": "Email requerido."}, status=status.HTTP_400_BAD_REQUEST
+            )
+
+        try:
+            user = User.objects.get(email=email)
+        except User.DoesNotExist:
+            return Response(
+                {"detail": "No existe un usuario con ese email."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        person = Person.objects.filter(user=user).first()
+        if not person:
+            return Response(
+                {"detail": "No hay perfil de persona asociado a ese usuario."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        person.has_access = serializer.validated_data["hasAccess"]
+        person.save(update_fields=["has_access"])
+
         plan_type = request.data.get("planType")
-        logger.info(f"PlanType recibido: {plan_type}")
-        if person.has_access and student and plan_type in [PlanChoices.MONTHLY, PlanChoices.ANNUAL]:
-            # Solo crear si no existe
-            if not hasattr(student, "subscription"):
-                Subscription.objects.create(
+        valid_plans = {choice.value for choice in PlanChoices}
+        plan_is_valid = plan_type in valid_plans
+
+        if plan_is_valid:
+            student, created_student = Student.objects.get_or_create(
+                person=person,
+                defaults={
+                    "description": "Estoy emocionado de comenzar mi aprendizaje en Apart y alcanzar mis metas."  # noqa: E501
+                },
+            )
+            if person.has_access:
+                Subscription.objects.get_or_create(
                     student=student,
-                    plan=plan_type,
+                    defaults={"plan": plan_type},
                 )
-                logger.info(f"Subscription creada para {student} con plan {plan_type}")
-            else:
-                logger.info(f"El student {student} ya tiene una suscripción")
 
         return Response(
             {"detail": "Acceso actualizado", "has_access": person.has_access},
@@ -159,3 +164,43 @@ class MyVocabularyView(APIView):
         vocabularies = Vocabulary.objects.filter(student_id=student_id).order_by("word")
         serializer = VocabularySerializer(vocabularies, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+class MyCoursesProgressView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    @extend_schema(
+        tags=["Courses"],
+        summary="Avance de todos mis cursos (usuario autenticado)",
+        description=(
+            "Devuelve el porcentaje de avance de todos los cursos del usuario autenticado, "  # noqa: E501
+            "contando actividades con al menos una respuesta. Incluye desglose por módulo "  # noqa: E501
+            "y un campo `is_active` que indica si es el curso activo."
+        ),
+        responses={200: CourseProgressSerializer(many=True)},
+    )
+    def get(self, request):
+        user = request.user
+
+        enrollments = Enrollment.objects.select_related("course").filter(
+            student__person__user_id=user.id
+        )
+
+        active_course_id = None
+        active_enrollment = enrollments.filter(status=EnrollmentStatus.ACTIVE).first()
+        if active_enrollment:
+            active_course_id = active_enrollment.course_id
+
+        results = []
+        for e in enrollments:
+            result = CourseProgressService(course=e.course, user=user).compute()
+            serializer = CourseProgressSerializer({
+                "course": {"id": e.course.id, "name": e.course.name},
+                "overall": result.overall,
+                "modules": result.modules,
+                "is_active": e.course_id == active_course_id,
+            })
+            results.append(serializer.data)
+        results = sorted(results, key=lambda x: not x["is_active"])
+
+        return Response(results)

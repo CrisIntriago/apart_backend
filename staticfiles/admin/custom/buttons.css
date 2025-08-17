@@ -1,0 +1,27 @@
+.apart-btns {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+  margin-top: 4px;
+}
+
+.apart-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px 12px;
+  border-radius: 10px;
+  font-weight: 600;
+  text-decoration: none;
+  line-height: 1.2;
+  border: 1px solid #d1d5db;
+  box-shadow: 0 1px 1px rgba(0,0,0,.05);
+}
+
+.apart-btn--primary {
+  background: #111827;
+  color: #fff;
+}
+.apart-btn--primary:hover { filter: brightness(1.05); }
+.apart-btn:focus { outline: 2px solid transparent; outline-offset: 2px; }

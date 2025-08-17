@@ -11,7 +11,9 @@ env:
   DB_NAME: ${{ secrets.DB_NAME }}
   DB_USER: ${{ secrets.DB_USER }}
   DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
-  DB_PORT: ${{ secrets.DB_PORT }}
+  EMAIL_HOST_USER: ${{ secrets.EMAIL_HOST_USER }}
+  EMAIL_HOST_PASSWORD: ${{ secrets.EMAIL_HOST_PASSWORD }}
+  USE_SQLITE: "True"
 
 jobs:
   deploy:
@@ -27,4 +29,6 @@ jobs:
       - name: Run tests with uv
         run: |
           uv sync
+          uv run manage.py makemigrations --noinput
+          uv run manage.py migrate --noinput
           uv run manage.py test

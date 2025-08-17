@@ -35,28 +35,45 @@ class ProfileSerializer(serializers.ModelSerializer):
 
 
 class StudentProfileSerializer(ProfileSerializer):
-    description = serializers.CharField(
-        source="student.description",
-        allow_blank=True,
-        allow_null=True,
-        read_only=True,
-    )
-    languages = StudentLanguageProficiencySerializer(
-        many=True,
-        read_only=True,
-        source="student.language_proficiencies",
-    )
-    course = CourseSerializer(read_only=True, source="student.active_course")
+    description = serializers.SerializerMethodField()
+    languages = serializers.SerializerMethodField()
+    course = serializers.SerializerMethodField()
+    has_access = serializers.SerializerMethodField()
 
     class Meta(ProfileSerializer.Meta):
         model = Person
-        fields = ProfileSerializer.Meta.fields + ("description", "languages", "course")
+        fields = ProfileSerializer.Meta.fields + (
+            "description",
+            "languages",
+            "course",
+            "has_access",
+        )
+
+    def get_description(self, obj):
+        return getattr(getattr(obj, "student", None), "description", "") or ""
+
+    def get_languages(self, obj):
+        student = getattr(obj, "student", None)
+        if student:
+            return StudentLanguageProficiencySerializer(
+                student.language_proficiencies.all(), many=True
+            ).data
+        return []
+
+    def get_course(self, obj):
+        student = getattr(obj, "student", None)
+        if student and student.active_course:
+            return CourseSerializer(student.active_course).data
+        return None
+
+    def get_has_access(self, obj):
+        return getattr(getattr(obj, "student", None), "has_access", False)
 
 
 class UpdateAccessSerializer(serializers.Serializer):
     hasAccess = serializers.BooleanField()
     email = serializers.EmailField()
-    plan = serializers.CharField()
+    planType = serializers.CharField()
 
 
 class StudentDescriptionUpdateSerializer(serializers.Serializer):

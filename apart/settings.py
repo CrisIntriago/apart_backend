@@ -32,12 +32,20 @@ SECRET_KEY = env("SECRET_KEY")
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = env.bool("DEBUG", default=True)
 
+
 ALLOWED_HOSTS = [
     "localhost",
     "apartbackend-production.up.railway.app",
     "study-apart.com",
     "apart-frontend-application.vercel.app",
     "127.0.0.1",
+]
+
+# Permitir solicitudes CSRF desde dominios confiables
+CSRF_TRUSTED_ORIGINS = [
+    "https://apartbackend-production.up.railway.app",
+    "https://www.study-apart.com",
+    "https://apart-frontend-application.vercel.app",
 ]
 
 if DEBUG:
