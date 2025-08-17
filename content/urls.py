@@ -40,7 +40,7 @@ urlpatterns = [
         name="exam-activities",
     ),
     path(
-        "exams/<int:exam_id>/finish/",
+        "exams/<int:attempt_id>/finish/",
         FinishAttemptAndSubmitAnswersView.as_view(),
         name="exam-finish",
     ),
