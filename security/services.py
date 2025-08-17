@@ -38,6 +38,7 @@ def register_user(validated_data):
         date_of_birth=validated_data["date_of_birth"],
         country=validated_data["country"],
         languages=validated_data["languages"],
+        photo=validated_data["photo"] if "photo" in validated_data else None,
     )
     return user
 

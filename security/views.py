@@ -6,7 +6,9 @@ from django.contrib.auth import get_user_model, login
 from django.db.models import Q
 from django.shortcuts import redirect, render
 from django.utils import timezone
+from django.utils.decorators import method_decorator
 from django.views import View
+from django.views.decorators.csrf import csrf_exempt
 from django.views.generic import TemplateView
 from drf_spectacular.utils import (
     OpenApiExample,
@@ -54,6 +56,7 @@ class RegisterView(APIView):
     )
     def post(self, request):
         google_token = request.data.get("google_token")
+
         if google_token:
             try:
                 url = f"https://oauth2.googleapis.com/tokeninfo?id_token={google_token}"
@@ -70,7 +73,7 @@ class RegisterView(APIView):
                         "user": {
                             "email": google_data["email"],
                             "username": google_data["name"],
-                            # TO-DO: Guardar la imagen
+                            "photo": google_data["picture"],
                             "password": User.make_random_password(),
                         },
                         "token": "notokenyet",
@@ -87,6 +90,7 @@ class RegisterView(APIView):
         serializer.is_valid(raise_exception=True)
         user = register_user(serializer.validated_data)
         token = register_token(user)
+        photo = user.person.photo if user.person.photo else None
         return Response(
             {
                 "user": {
@@ -98,6 +102,7 @@ class RegisterView(APIView):
                     "country": user.person.country,
                     "date_of_birth": user.person.date_of_birth,
                     "languages": user.person.languages,
+                    "photo": photo,
                 },
                 "token": token,
             },
@@ -105,8 +110,10 @@ class RegisterView(APIView):
         )
 
 
+@method_decorator(csrf_exempt, name="dispatch")
 class LoginView(APIView):
     permission_classes = [AllowAny]
+    authentication_classes = []
 
     @extend_schema(
         request={
@@ -142,6 +149,7 @@ class LoginView(APIView):
                             "user": {
                                 "username": google_data.get("name", ""),
                                 "email": google_data["email"],
+                                "photo": google_data["picture"],
                                 "password": User.make_random_password(),
                             }
                         },
@@ -228,6 +236,7 @@ class LoginView(APIView):
 
             courses_data = CourseSerializer(courses, many=True).data
 
+        photo = user.person.photo.url if user.person.photo and hasattr(user.person.photo, 'url') else None
         return Response(
             {
                 "user": {
@@ -241,6 +250,7 @@ class LoginView(APIView):
                     "date_of_birth": user.person.date_of_birth,
                     "languages": user.person.languages,
                     "courses": courses_data,
+                    "photo": photo,
                 },
                 "token": token,
             },

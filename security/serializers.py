@@ -16,6 +16,7 @@ class RegisterSerializer(serializers.ModelSerializer):
         max_length=3,
         write_only=True,
     )
+    photo = serializers.CharField(write_only=True, required=False, allow_blank=True)
 
     class Meta:
         model = User
@@ -28,6 +29,7 @@ class RegisterSerializer(serializers.ModelSerializer):
             "country",
             "date_of_birth",
             "languages",
+            "photo",
         ]
 
 

@@ -1,0 +1,579 @@
+[
+{
+  "model": "users.user",
+  "fields": {
+    "password": "pbkdf2_sha256$1000000$fMNP1cnLFIm6sz1yfrCoup$C5AvwJbYIwxG7WFD2IT6jGw4rbvUFvH7o18krTD0Olc=",
+    "last_login": "2025-08-15T20:20:55.760Z",
+    "is_superuser": true,
+    "first_name": "",
+    "last_name": "",
+    "is_staff": true,
+    "is_active": true,
+    "date_joined": "2025-08-15T17:28:56.475Z",
+    "email": "tri.robespierre@gmail.com",
+    "username": "robtrivi",
+    "phone": null,
+    "groups": [],
+    "user_permissions": []
+  }
+},
+{
+  "model": "users.user",
+  "fields": {
+    "password": "pbkdf2_sha256$1000000$9TwnN9WwiZ6B1DzLeD6bNK$GIvj703ATmfvc6v/8SNXLG+r6TUvYLjhnp6AFNXt99w=",
+    "last_login": "2025-08-15T20:27:32.674Z",
+    "is_superuser": false,
+    "first_name": "",
+    "last_name": "",
+    "is_staff": false,
+    "is_active": true,
+    "date_joined": "2025-08-15T19:30:44.188Z",
+    "email": "pedroluna@gmail.com",
+    "username": "pedroluna@gmail.com",
+    "phone": null,
+    "groups": [],
+    "user_permissions": []
+  }
+},
+{
+  "model": "people.person",
+  "pk": 1,
+  "fields": {
+    "user": [
+      "tri.robespierre@gmail.com"
+    ],
+    "first_name": "Robespierre",
+    "last_name": "Triviño",
+    "date_of_birth": "2025-08-27",
+    "photo": "people/photos/clock.png",
+    "country": "Ecuador",
+    "languages": [
+      "Español"
+    ],
+    "has_access": true
+  }
+},
+{
+  "model": "people.person",
+  "pk": 2,
+  "fields": {
+    "user": [
+      "pedroluna@gmail.com"
+    ],
+    "first_name": "Pedro",
+    "last_name": "Luna",
+    "date_of_birth": "2025-08-22",
+    "photo": "people/photos/spanish.png",
+    "country": "Ecuador",
+    "languages": [
+      "Español"
+    ],
+    "has_access": true
+  }
+},
+{
+  "model": "people.student",
+  "pk": 1,
+  "fields": {
+    "person": 1,
+    "active_course": 1,
+    "description": "Estoy feliz de estar aprendiendo"
+  }
+},
+{
+  "model": "people.student",
+  "pk": 2,
+  "fields": {
+    "person": 2,
+    "active_course": null,
+    "description": "Me gusta aprender"
+  }
+},
+{
+  "model": "people.enrollment",
+  "pk": 2,
+  "fields": {
+    "student": 1,
+    "course": 1,
+    "status": "ACTIVE",
+    "enrolled_at": "2025-08-15T18:43:26.509Z",
+    "start_at": "2025-08-15T17:00:00Z",
+    "end_at": "2025-09-30T11:00:00Z",
+    "role": "student",
+    "notes": "",
+    "progress_percent": "40.00",
+    "last_activity_at": null
+  }
+},
+{
+  "model": "people.enrollment",
+  "pk": 3,
+  "fields": {
+    "student": 1,
+    "course": 2,
+    "status": "PAUSED",
+    "enrolled_at": "2025-08-15T18:45:53.915Z",
+    "start_at": "2025-08-14T23:00:00Z",
+    "end_at": "2025-08-29T23:00:00Z",
+    "role": "student",
+    "notes": "",
+    "progress_percent": "0.00",
+    "last_activity_at": null
+  }
+},
+{
+  "model": "languages.language",
+  "pk": 1,
+  "fields": {
+    "name": "Inglés",
+    "icon": "languages/icons/ingles_uJBelOp.jpg"
+  }
+},
+{
+  "model": "languages.language",
+  "pk": 2,
+  "fields": {
+    "name": "Español",
+    "icon": "languages/icons/spanish_0lKqryD.png"
+  }
+},
+{
+  "model": "content.course",
+  "pk": 1,
+  "fields": {
+    "name": "English for Everyday Life",
+    "description": "Aprende el inglés que realmente usarás en tu vida diaria, desde pedir un café hasta conversar con un amigo extranjero.",
+    "image": "courses/images/ingles_kOsDPoM.jpg",
+    "language": 1,
+    "difficulty": "easy"
+  }
+},
+{
+  "model": "content.course",
+  "pk": 2,
+  "fields": {
+    "name": "Travel English Adventure",
+    "description": "Prepárate para viajar al extranjero y comunicarte con seguridad en aeropuertos, hoteles y excursiones.",
+    "image": "courses/images/vestimenta.png",
+    "language": 1,
+    "difficulty": "easy"
+  }
+},
+{
+  "model": "content.module",
+  "pk": 1,
+  "fields": {
+    "course": 1,
+    "name": "Morning Routines",
+    "description": "Hablar sobre tus actividades diarias.",
+    "image": "modules/images/ingles_eryKISk.jpg",
+    "difficulty": "easy",
+    "end_date": "2025-08-29T17:00:00Z"
+  }
+},
+{
+  "model": "content.module",
+  "pk": 2,
+  "fields": {
+    "course": 1,
+    "name": "At the Store",
+    "description": "Frases y vocabulario para comprar.",
+    "image": "modules/images/ingles_aONeGKP.jpg",
+    "difficulty": "easy",
+    "end_date": "2025-08-30T17:00:00Z"
+  }
+},
+{
+  "model": "content.module",
+  "pk": 3,
+  "fields": {
+    "course": 1,
+    "name": "Grammar Made Easy",
+    "description": "Expresiones para restaurantes y cafés.",
+    "image": "modules/images/ingles_V8FjUKH.jpg",
+    "difficulty": "easy",
+    "end_date": "2025-08-30T17:00:00Z"
+  }
+},
+{
+  "model": "content.module",
+  "pk": 4,
+  "fields": {
+    "course": 1,
+    "name": "Dining Out",
+    "description": "Conversaciones cortas e informales.",
+    "image": "modules/images/ingles_k85Cj0c.jpg",
+    "difficulty": "medium",
+    "end_date": "2025-08-31T17:00:00Z"
+  }
+},
+{
+  "model": "content.module",
+  "pk": 5,
+  "fields": {
+    "course": 2,
+    "name": "At the Airport",
+    "description": "Frases para vuelos y migración.",
+    "image": "",
+    "difficulty": "easy",
+    "end_date": "2025-08-27T17:00:00Z"
+  }
+},
+{
+  "model": "content.module",
+  "pk": 6,
+  "fields": {
+    "course": 2,
+    "name": "Hotel Check-In",
+    "description": "Reservas y solicitudes.",
+    "image": "",
+    "difficulty": "medium",
+    "end_date": "2025-08-30T23:00:00Z"
+  }
+},
+{
+  "model": "content.exam",
+  "pk": 1,
+  "fields": {
+    "course": 1,
+    "type": "MIDTERM",
+    "title": "Examen Parcial – English for Everyday Life",
+    "description": "Evalúa lo aprendido en los módulos Morning Routines, At the Store, Dining Out y Social Chit-Chat mediante preguntas prácticas y vocabulario útil.",
+    "is_published": true,
+    "time_limit_minutes": 30,
+    "attempts_allowed": 2,
+    "pass_mark_percent": 60
+  }
+},
+{
+  "model": "activities.activity",
+  "pk": 1,
+  "fields": {
+    "title": "Wake-up Time",
+    "instructions": "Elige la forma correcta de decir \"Me levanto a las 7:00\" en inglés.",
+    "feedback": "\"I get up at 7:00\" es la forma correcta para hablar de la hora en que te levantas.",
+    "difficulty": "easy",
+    "type": "choice",
+    "points": 10,
+    "created_at": "2025-08-15T18:12:18.391Z",
+    "module": 1
+  }
+},
+{
+  "model": "activities.activity",
+  "pk": 2,
+  "fields": {
+    "title": "Morning Actions",
+    "instructions": "Selecciona todas las frases que describan actividades comunes en la rutina matutina.",
+    "feedback": "\"I brush my teeth\", \"I take a shower\" y \"I make breakfast\" son frases típicas de la rutina matutina.",
+    "difficulty": "medium",
+    "type": "choice",
+    "points": 15,
+    "created_at": "2025-08-15T18:15:04.759Z",
+    "module": 1
+  }
+},
+{
+  "model": "activities.activity",
+  "pk": 3,
+  "fields": {
+    "title": "Morning Coffee Time",
+    "instructions": "Completa la frase con la palabra correcta.",
+    "feedback": "La palabra correcta es \"coffee\".",
+    "difficulty": "easy",
+    "type": "fill_in",
+    "points": 10,
+    "created_at": "2025-08-15T18:32:02.767Z",
+    "module": 1
+  }
+},
+{
+  "model": "activities.activity",
+  "pk": 4,
+  "fields": {
+    "title": "Morning Vocabulary Match",
+    "instructions": "Une cada palabra o frase en inglés con su traducción al español",
+    "feedback": "Cada palabra en inglés debe ir con su equivalente en español.",
+    "difficulty": "easy",
+    "type": "matching",
+    "points": 10,
+    "created_at": "2025-08-15T18:37:15.874Z",
+    "module": 1
+  }
+},
+{
+  "model": "activities.activity",
+  "pk": 5,
+  "fields": {
+    "title": "Arrange the Morning Sentence",
+    "instructions": "Ordena las palabras para formar una frase correcta.",
+    "feedback": "La frase correcta es \"I make breakfast in the morning\".",
+    "difficulty": "easy",
+    "type": "order",
+    "points": 10,
+    "created_at": "2025-08-15T18:38:51.551Z",
+    "module": 1
+  }
+},
+{
+  "model": "activities.activity",
+  "pk": 6,
+  "fields": {
+    "title": "Time",
+    "instructions": "¿Cuál es la forma correcta de decir \"Me levanto a las 8:00\" en inglés?",
+    "feedback": "",
+    "difficulty": "medium",
+    "type": "choice",
+    "points": 0,
+    "created_at": "2025-08-15T18:59:02.606Z",
+    "module": null
+  }
+},
+{
+  "model": "activities.examactivity",
+  "pk": 1,
+  "fields": {
+    "exam": 1,
+    "activity": 6,
+    "required": true,
+    "position": 0
+  }
+},
+{
+  "model": "activities.useranswer",
+  "pk": 1,
+  "fields": {
+    "user": [
+      "tri.robespierre@gmail.com"
+    ],
+    "activity": 1,
+    "exam_attempt": null,
+    "response_data": {
+      "selected_ids": [
+        1
+      ]
+    },
+    "is_correct": true,
+    "answered_at": "2025-08-15T20:25:31.238Z"
+  }
+},
+{
+  "model": "activities.useranswer",
+  "pk": 2,
+  "fields": {
+    "user": [
+      "tri.robespierre@gmail.com"
+    ],
+    "activity": 2,
+    "exam_attempt": null,
+    "response_data": {
+      "selected_ids": [
+        5,
+        6,
+        8
+      ]
+    },
+    "is_correct": true,
+    "answered_at": "2025-08-15T20:26:48.498Z"
+  }
+},
+{
+  "model": "activities.useranswer",
+  "pk": 3,
+  "fields": {
+    "user": [
+      "pedroluna@gmail.com"
+    ],
+    "activity": 2,
+    "exam_attempt": null,
+    "response_data": {
+      "selected_ids": [
+        5,
+        6,
+        8
+      ]
+    },
+    "is_correct": true,
+    "answered_at": "2025-08-15T20:28:31.232Z"
+  }
+},
+{
+  "model": "activities.choiceactivity",
+  "pk": 1,
+  "fields": {
+    "activity_ptr": 1,
+    "is_multiple": false
+  }
+},
+{
+  "model": "activities.choiceactivity",
+  "pk": 2,
+  "fields": {
+    "activity_ptr": 2,
+    "is_multiple": true
+  }
+},
+{
+  "model": "activities.choiceactivity",
+  "pk": 6,
+  "fields": {
+    "activity_ptr": 6,
+    "is_multiple": false
+  }
+},
+{
+  "model": "activities.choice",
+  "pk": 1,
+  "fields": {
+    "activity": 1,
+    "text": "I get up at 7:00",
+    "is_correct": true
+  }
+},
+{
+  "model": "activities.choice",
+  "pk": 2,
+  "fields": {
+    "activity": 1,
+    "text": "I stand up at 7:00",
+    "is_correct": false
+  }
+},
+{
+  "model": "activities.choice",
+  "pk": 3,
+  "fields": {
+    "activity": 1,
+    "text": "I wake at 7:00",
+    "is_correct": false
+  }
+},
+{
+  "model": "activities.choice",
+  "pk": 4,
+  "fields": {
+    "activity": 1,
+    "text": "I rise up 7:00",
+    "is_correct": false
+  }
+},
+{
+  "model": "activities.choice",
+  "pk": 5,
+  "fields": {
+    "activity": 2,
+    "text": "I brush my teeth",
+    "is_correct": true
+  }
+},
+{
+  "model": "activities.choice",
+  "pk": 6,
+  "fields": {
+    "activity": 2,
+    "text": "I take a shower",
+    "is_correct": true
+  }
+},
+{
+  "model": "activities.choice",
+  "pk": 7,
+  "fields": {
+    "activity": 2,
+    "text": "I draw the curtain of life",
+    "is_correct": false
+  }
+},
+{
+  "model": "activities.choice",
+  "pk": 8,
+  "fields": {
+    "activity": 2,
+    "text": "I make breakfast",
+    "is_correct": true
+  }
+},
+{
+  "model": "activities.choice",
+  "pk": 9,
+  "fields": {
+    "activity": 6,
+    "text": "I get up at 8:00",
+    "is_correct": true
+  }
+},
+{
+  "model": "activities.choice",
+  "pk": 10,
+  "fields": {
+    "activity": 6,
+    "text": "I geting up at 8:00",
+    "is_correct": false
+  }
+},
+{
+  "model": "activities.choice",
+  "pk": 11,
+  "fields": {
+    "activity": 6,
+    "text": "I rise up 8:00",
+    "is_correct": false
+  }
+},
+{
+  "model": "activities.fillintheblankactivity",
+  "pk": 3,
+  "fields": {
+    "activity_ptr": 3,
+    "text": "I drink {{blank}} every morning.",
+    "correct_answers": {
+      "0": "coffee"
+    }
+  }
+},
+{
+  "model": "activities.matchingactivity",
+  "pk": 4,
+  "fields": {
+    "activity_ptr": 4
+  }
+},
+{
+  "model": "activities.matchingpair",
+  "pk": 1,
+  "fields": {
+    "activity": 4,
+    "left": "Wake up",
+    "right": "Despertarse",
+    "is_vocabulary": true
+  }
+},
+{
+  "model": "activities.matchingpair",
+  "pk": 2,
+  "fields": {
+    "activity": 4,
+    "left": "Get up",
+    "right": "Levantarse",
+    "is_vocabulary": true
+  }
+},
+{
+  "model": "activities.matchingpair",
+  "pk": 3,
+  "fields": {
+    "activity": 4,
+    "left": "Levantarse",
+    "right": "Cepillarme los dientes",
+    "is_vocabulary": false
+  }
+},
+{
+  "model": "activities.wordorderingactivity",
+  "pk": 5,
+  "fields": {
+    "activity_ptr": 5,
+    "sentence": "I make breakfast in the morning"
+  }
+}
+]
