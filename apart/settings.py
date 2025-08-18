@@ -78,6 +78,7 @@ INSTALLED_APPS = [
     "allauth.socialaccount",
     "allauth.socialaccount.providers.google",
     "whitenoise.runserver_nostatic",
+    "storages",
     "knox",
     "apart",
     "users",
@@ -242,9 +243,8 @@ AUTH_USER_MODEL = "users.User"
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.2/howto/static-files/
 
-MEDIA_URL = "media/"
-MEDIA_ROOT = os.path.join(BASE_DIR, "media")
-
+# Media files will be handled by S3 (configured below)
+# MEDIA_URL and MEDIA_ROOT are overridden by S3 configuration
 
 STATIC_URL = "static/"
 STATICFILES_DIRS = [
@@ -327,3 +327,26 @@ EMAIL_HOST_USER = env("EMAIL_HOST_USER")
 EMAIL_HOST_PASSWORD = env("EMAIL_HOST_PASSWORD")
 
 DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
+
+# AWS S3 Configuration
+AWS_ACCESS_KEY_ID = env("AWS_ACCESS_KEY_ID")
+AWS_SECRET_ACCESS_KEY = env("AWS_SECRET_ACCESS_KEY")
+AWS_STORAGE_BUCKET_NAME = env(
+    "AWS_STORAGE_BUCKET_NAME", default="apart-backend-django")
+AWS_S3_REGION_NAME = env("AWS_REGION_NAME", default="us-east-1")
+AWS_S3_SIGNATURE_VERSION = env("AWS_S3_SIGNATURE_VERSION", default="s3v4")
+AWS_DEFAULT_ACL = None
+AWS_S3_VERIFY = True
+AWS_S3_FILE_OVERWRITE = False
+AWS_QUERYSTRING_AUTH = False
+
+# Always use S3 for media files (user uploads)
+STORAGES = {
+    "default": {
+        "BACKEND": "storages.backends.s3boto3.S3Boto3Storage",
+    },
+    "staticfiles": {
+        "BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage",
+    },
+}
+MEDIA_URL = f'https://{AWS_STORAGE_BUCKET_NAME}.s3.{AWS_S3_REGION_NAME}.amazonaws.com/'
